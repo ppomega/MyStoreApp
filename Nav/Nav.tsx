@@ -2,14 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, TouchableOpacity, Dimensions } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-} from "react-native-reanimated";
 import Icon from "react-native-vector-icons/Entypo";
-import { DashBoard } from "../DashBoard/DashBoard";
-
 const { width } = Dimensions.get("window");
 const TAB_WIDTH = width / 4;
 
@@ -19,17 +12,7 @@ export default function Nav() {
   const navigation = useNavigation();
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const translateX = useSharedValue(0);
 
-  useEffect(() => {
-    translateX.value = withTiming(activeIndex * TAB_WIDTH, {
-      duration: 250,
-    });
-  }, [activeIndex]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
 
   const handlePress = (index: number, route: string) => {
     setActiveIndex(index);
@@ -50,7 +33,7 @@ export default function Nav() {
         }}
       >
         {/* Sliding Indicator */}
-        <Animated.View
+        <View
           style={[
             {
               position: "absolute",
@@ -59,7 +42,6 @@ export default function Nav() {
               backgroundColor: "#e6f0ff",
               borderRadius: 12,
             },
-            animatedStyle,
           ]}
         />
 
