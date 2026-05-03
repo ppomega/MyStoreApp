@@ -1,26 +1,25 @@
-import * as React from 'react';
-import {createStaticNavigation} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import { DashBoard } from './DashBoard/DashBoard';
-import Nav from './Nav/Nav';
-import { View } from 'react-native';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-const RootStack = createNativeStackNavigator({
-  screens: {
-    Home: {
-      screen: DashBoard
-    },
-    Profile: {
-      screen:DashBoard,
-    },
-  },
-});
+import Nav from "./Nav/Nav";
+import { DashBoard } from "./DashBoard/DashBoard";
+import Inventory from "./Inventory/Inventory";
 
-const Navigation = createStaticNavigation(RootStack);
+const Stack = createNativeStackNavigator();
 
 export default function App() {
-  return  <View style={{ flex: 1 }}>
-          <DashBoard />
-          <Nav />
-        </View> ;
+  return (
+    <NavigationContainer>
+
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Main" component={DashBoard} />
+        <Stack.Screen name="Orders" component={DashBoard} />
+        <Stack.Screen name="Inventory" component={Inventory} />
+        <Stack.Screen name="Profile" component={DashBoard} />
+      </Stack.Navigator>
+          <Nav/>
+
+    </NavigationContainer>
+  );
 }
