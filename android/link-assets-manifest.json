@@ -2,6 +2,10 @@
   "migIndex": 1,
   "data": [
     {
+      "path": "assets/fonts/JetBrains.ttf",
+      "sha1": "f2cb906a2416e6981bdf29932661b0e92600c8d4"
+    },
+    {
       "path": "node_modules/react-native-vector-icons/Fonts/AntDesign.ttf",
       "sha1": "4e77868439280fb434d4697c7b911271406c81f3"
     },

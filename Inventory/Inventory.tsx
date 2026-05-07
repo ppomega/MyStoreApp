@@ -9,6 +9,7 @@ import {
   Modal,
   Platform,
 } from "react-native";
+import  Icon  from "react-native-vector-icons/FontAwesome";
 
 const initialData = [
   {
@@ -102,13 +103,16 @@ export default function Inventory() {
   return (
     <View style={styles.container}>
       {/* 🔍 Search */}
+      <View style={{ }}>
+      <Icon name="search" size={16} color="#999" style={{ position: "absolute", top: 12, left: 10, zIndex: 1 }} />
       <TextInput
-        placeholder="Search..."
+        placeholder="Search"
+        placeholderTextColor={"#999"}
         value={search}
         onChangeText={setSearch}
         style={styles.search}
       />
-
+</View>
       {/* ➕ Add Button */}
       <TouchableOpacity
         style={styles.addBtn}
@@ -139,10 +143,11 @@ export default function Inventory() {
             {editingItem ? "Edit Item" : "Add Item"}
           </Text>
 
-          {["name", "sellingPrice", "buyingPrice", "category"].map((field) => (
+          {["Name", "Selling Price", "Buying Price", "Category"].map((field) => (
             <TextInput
               key={field}
               placeholder={field}
+              placeholderTextColor={"#999"}
               value={(form as any)[field]}
               onChangeText={(text) =>
                 setForm((prev) => ({ ...prev, [field]: text }))
@@ -174,7 +179,8 @@ const styles = StyleSheet.create({
     height: 45,
     backgroundColor: "#fff",
     borderRadius: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 30,
+    
     marginBottom: 10,
   },
 
@@ -184,6 +190,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     marginBottom: 10,
+    fontWeight: "light",
   },
 
   card: {

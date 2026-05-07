@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Text } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
 import Icon from "react-native-vector-icons/Entypo";
-const TABS = ["Main", "Orders", "Inventory", "Profile"];
+const TABS = ["Main", "Orders", "Inventory", "Tenants"];
 
 export default function Nav() {
   const navigation = useNavigation();
