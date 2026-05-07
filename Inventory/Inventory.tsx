@@ -21,6 +21,7 @@ import {
   InventoryItemInput,
   updateInventoryItem,
 } from "../services/inventoryApi";
+import { useAppTheme } from "../theme/ThemeContext";
 
 type InventoryForm = Omit<InventoryItemInput, "mode"> & {
   mode: string;
@@ -74,6 +75,7 @@ function parseMode(modeText: string) {
 }
 
 export default function Inventory() {
+  const { colors } = useAppTheme();
   const [data, setData] = useState<InventoryItem[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -82,6 +84,9 @@ export default function Inventory() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [pendingDeleteItem, setPendingDeleteItem] =
+    useState<InventoryItem | null>(null);
+  const [successMessage, setSuccessMessage] = useState("");
   const [form, setForm] = useState<InventoryForm>(emptyForm);
 
   const loadInventory = async () => {
@@ -142,13 +147,19 @@ export default function Inventory() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const deleteItem = async (id: string) => {
     try {
       await deleteInventoryItem(id);
       setData((prev) => prev.filter((item) => item.id !== id));
+      setPendingDeleteItem(null);
+      setSuccessMessage("Inventory item deleted.");
     } catch (deleteError) {
       Alert.alert("Delete failed", "Could not delete the inventory item.");
     }
+  };
+
+  const handleDelete = (item: InventoryItem) => {
+    setPendingDeleteItem(item);
   };
 
   const handleEdit = (item: InventoryItem) => {
@@ -168,25 +179,46 @@ export default function Inventory() {
   };
 
   const renderItem = ({ item }: { item: InventoryItem }) => (
-    <View style={styles.card}>
-      <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.category}>{item.category}</Text>
-
-      <View style={styles.row}>
-        <Text style={styles.buy}>Rs {item.buyingPrice}</Text>
-        <Text style={styles.sell}>Rs {item.sellingPrice}</Text>
+    <View style={[styles.card, { backgroundColor: colors.surface }]}>
+      <View>
+        <Text style={[styles.name, { color: colors.text }]} numberOfLines={2}>
+          {item.name}
+        </Text>
+        <Text style={[styles.category, { color: colors.textMuted }]} numberOfLines={1}>
+          {item.category}
+        </Text>
       </View>
 
-      {item.mode.length > 0 ? (
-        <Text style={styles.mode}>{formatMode(item.mode)}</Text>
-      ) : null}
+      <View style={styles.details}>
+        <View>
+          <Text style={[styles.priceLabel, { color: colors.textMuted }]}>Buying</Text>
+          <Text style={styles.buy}>Rs {item.buyingPrice}</Text>
+        </View>
 
-      <View style={styles.actions}>
-        <TouchableOpacity onPress={() => handleEdit(item)}>
+        <View>
+          <Text style={[styles.priceLabel, { color: colors.textMuted }]}>Selling</Text>
+          <Text style={styles.sell}>Rs {item.sellingPrice}</Text>
+        </View>
+
+        {item.mode.length > 0 ? (
+          <Text style={[styles.mode, { color: colors.textMuted }]} numberOfLines={3}>
+            {formatMode(item.mode)}
+          </Text>
+        ) : null}
+      </View>
+
+      <View style={[styles.actions, { borderTopColor: colors.border }]}>
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.editBtn]}
+          onPress={() => handleEdit(item)}
+        >
           <Text style={styles.edit}>Edit</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => handleDelete(item.id)}>
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.deleteBtn]}
+          onPress={() => handleDelete(item)}
+        >
           <Text style={styles.delete}>Delete</Text>
         </TouchableOpacity>
       </View>
@@ -194,7 +226,7 @@ export default function Inventory() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View>
         <Icon
           name="search"
@@ -207,12 +239,18 @@ export default function Inventory() {
           placeholderTextColor="#999"
           value={search}
           onChangeText={setSearch}
-          style={styles.search}
+          style={[
+            styles.search,
+            {
+              backgroundColor: colors.input,
+              color: colors.text,
+            },
+          ]}
         />
       </View>
 
       <TouchableOpacity style={styles.addBtn} onPress={openCreateModal}>
-        <Text style={{ color: "#fff", fontWeight: "bold" }}>+ Add Item</Text>
+        <Text style={{ color: "#fff", fontFamily: "JetBrains", fontWeight: "400" }}>+ Add Item</Text>
       </TouchableOpacity>
 
       {loading ? (
@@ -221,7 +259,7 @@ export default function Inventory() {
         <View style={styles.emptyState}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={loadInventory}>
-            <Text style={{ color: "#000" }}>Retry</Text>
+            <Text style={{ color: "#000", fontFamily: "JetBrains" }}>Retry</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -232,18 +270,27 @@ export default function Inventory() {
           numColumns={2}
           columnWrapperStyle={{ justifyContent: "space-between" }}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No inventory items found.</Text>
+            <Text style={[styles.emptyText, { color: colors.textMuted }]}>No inventory items found.</Text>
           }
         />
       )}
 
+      {successMessage ? (
+        <View style={styles.toast}>
+          <Text style={styles.toastText}>{successMessage}</Text>
+          <TouchableOpacity onPress={() => setSuccessMessage("")}>
+            <Text style={styles.toastDismiss}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
       <Modal visible={modalVisible} animationType="slide" transparent>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.overlay}
+          style={[styles.overlay, { backgroundColor: colors.overlay }]}
         >
-          <View style={styles.modal}>
-            <Text style={styles.title}>
+          <View style={[styles.modal, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.title, { color: colors.text }]}>
               {editingItem ? "Edit Item" : "Add Item"}
             </Text>
 
@@ -256,7 +303,14 @@ export default function Inventory() {
                 onChangeText={(text) =>
                   setForm((prev) => ({ ...prev, [field.key]: text }))
                 }
-                style={styles.input}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: colors.input,
+                    borderColor: colors.border,
+                    color: colors.text,
+                  },
+                ]}
                 keyboardType={field.keyboardType || "default"}
               />
             ))}
@@ -267,7 +321,7 @@ export default function Inventory() {
                 onPress={handleSave}
                 disabled={saving}
               >
-                <Text style={{ color: "#000" }}>
+                <Text style={{ color: "#000", fontFamily: "JetBrains" }}>
                   {saving ? "Saving..." : "Save"}
                 </Text>
               </TouchableOpacity>
@@ -276,11 +330,45 @@ export default function Inventory() {
                 onPress={() => setModalVisible(false)}
                 style={styles.saveBtn}
               >
-                <Text style={{ color: "#000" }}>Cancel</Text>
+                <Text style={{ color: "#000", fontFamily: "JetBrains" }}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={Boolean(pendingDeleteItem)}
+        animationType="fade"
+        transparent
+      >
+        <View style={[styles.confirmOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[styles.confirmBox, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.confirmTitle, { color: colors.text }]}>Delete item?</Text>
+            <Text style={[styles.confirmText, { color: colors.textMuted }]}>
+              This will permanently delete "{pendingDeleteItem?.name}" from
+              inventory.
+            </Text>
+
+            <View style={styles.confirmActions}>
+              <TouchableOpacity
+                style={styles.cancelDeleteBtn}
+                onPress={() => setPendingDeleteItem(null)}
+              >
+                <Text style={[styles.cancelDeleteText, { color: colors.text }]}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.confirmDeleteBtn}
+                onPress={() =>
+                  pendingDeleteItem ? deleteItem(pendingDeleteItem.id) : null
+                }
+              >
+                <Text style={styles.confirmDeleteText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </View>
   );
@@ -297,6 +385,7 @@ const styles = StyleSheet.create({
   },
 
   search: {
+    fontFamily: "JetBrains",
     height: 45,
     backgroundColor: "#fff",
     borderRadius: 10,
@@ -316,27 +405,60 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 12,
     borderRadius: 12,
-    marginBottom: 12,
+    minHeight: 250,
     width: "48%",
+    justifyContent: "space-between",
   },
 
-  name: { fontWeight: "bold" },
-  category: { fontSize: 11, color: "#888" },
-  mode: { fontSize: 11, color: "#555", marginTop: 6 },
+  name: { fontFamily: "JetBrains", fontWeight: "400", fontSize: 15, lineHeight: 20 },
+  category: { fontFamily: "JetBrains", fontSize: 11, color: "#888", marginTop: 4 },
+  mode: { fontFamily: "JetBrains", fontSize: 11, color: "#555", lineHeight: 16, marginTop: 12 },
+
+  details: {
+    gap: 10,
+    marginVertical: 14,
+  },
+
+  priceLabel: {
+    fontFamily: "JetBrains",
+    color: "#999",
+    fontSize: 10,
+    marginBottom: 2,
+  },
 
   row: { flexDirection: "row", justifyContent: "space-between" },
 
-  buy: { color: "#e74c3c" },
-  sell: { color: "#27ae60" },
+  buy: { color: "#e74c3c", fontFamily: "JetBrains", fontWeight: "400" },
+  sell: { color: "#27ae60", fontFamily: "JetBrains", fontWeight: "400" },
 
   actions: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 8,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
   },
 
-  edit: { color: "#fcc01e" },
-  delete: { color: "red" },
+  actionBtn: {
+    alignItems: "center",
+    borderRadius: 8,
+    flex: 1,
+    paddingVertical: 8,
+  },
+
+  editBtn: {
+    backgroundColor: "#8a6200",
+    marginRight: 6,
+  },
+
+  deleteBtn: {
+    backgroundColor: "#c0392b",
+    marginLeft: 6,
+  },
+
+  edit: { color: "#fff", fontFamily: "JetBrains", fontWeight: "400" },
+  delete: { color: "#fff", fontFamily: "JetBrains", fontWeight: "400" },
 
   emptyState: {
     alignItems: "center",
@@ -346,12 +468,14 @@ const styles = StyleSheet.create({
   },
 
   emptyText: {
+    fontFamily: "JetBrains",
     color: "#777",
     textAlign: "center",
     marginTop: 24,
   },
 
   errorText: {
+    fontFamily: "JetBrains",
     color: "#e74c3c",
     textAlign: "center",
   },
@@ -361,6 +485,32 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
+  },
+
+  toast: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    bottom: 135,
+    backgroundColor: "#111",
+    borderRadius: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+
+  toastText: {
+    fontFamily: "JetBrains",
+    color: "#fff",
+    fontWeight: "400",
+  },
+
+  toastDismiss: {
+    fontFamily: "JetBrains",
+    color: "#fcc01e",
+    fontWeight: "400",
   },
 
   overlay: {
@@ -382,12 +532,14 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    fontFamily: "JetBrains",
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "400",
     marginBottom: 20,
   },
 
   input: {
+    fontFamily: "JetBrains",
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
@@ -411,5 +563,67 @@ const styles = StyleSheet.create({
 
   disabledBtn: {
     opacity: 0.7,
+  },
+
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    paddingHorizontal: 28,
+  },
+
+  confirmBox: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 18,
+  },
+
+  confirmTitle: {
+    fontFamily: "JetBrains",
+    color: "#000",
+    fontSize: 18,
+    fontWeight: "400",
+    marginBottom: 8,
+  },
+
+  confirmText: {
+    fontFamily: "JetBrains",
+    color: "#555",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+
+  confirmActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 10,
+    marginTop: 18,
+  },
+
+  cancelDeleteBtn: {
+    borderColor: "#ddd",
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+
+  cancelDeleteText: {
+    fontFamily: "JetBrains",
+    color: "#333",
+    fontWeight: "400",
+  },
+
+  confirmDeleteBtn: {
+    backgroundColor: "#e74c3c",
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+
+  confirmDeleteText: {
+    fontFamily: "JetBrains",
+    color: "#fff",
+    fontWeight: "400",
   },
 });
