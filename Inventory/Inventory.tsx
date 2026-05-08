@@ -28,19 +28,14 @@ import {
 import { useAppTheme } from "../theme/ThemeContext";
 
 type InventoryForm = Omit<InventoryItemInput, "mode"> & {
-  mode: Record<InventoryModeKey, string>;
+  mode: Partial<Record<InventoryModeKey, string>>;
 };
-
-const emptyModeForm = INVENTORY_MODE_KEYS.reduce(
-  (mode, key) => ({ ...mode, [key]: "" }),
-  {} as Record<InventoryModeKey, string>
-);
 
 const emptyForm: InventoryForm = {
   name: "",
   sellingPrice: "",
   buyingPrice: "",
-  mode: emptyModeForm,
+  mode: {},
   category: "",
 };
 
@@ -63,18 +58,20 @@ function formatMode(mode: InventoryItem["mode"]) {
 }
 
 function modeToForm(mode: InventoryMode) {
-  return INVENTORY_MODE_KEYS.reduce<Record<InventoryModeKey, string>>(
+  return INVENTORY_MODE_KEYS.reduce<Partial<Record<InventoryModeKey, string>>>(
     (formMode, key) => {
-      formMode[key] = mode[key] === undefined ? "" : String(mode[key]);
+      if (mode[key] !== undefined) {
+        formMode[key] = String(mode[key]);
+      }
       return formMode;
     },
-    { ...emptyModeForm }
+    {}
   );
 }
 
-function formToMode(modeForm: Record<InventoryModeKey, string>) {
+function formToMode(modeForm: Partial<Record<InventoryModeKey, string>>) {
   return INVENTORY_MODE_KEYS.reduce<InventoryMode>((mode, key) => {
-    const value = modeForm[key].trim();
+    const value = modeForm[key]?.trim();
 
     if (!value) {
       return mode;
@@ -88,6 +85,13 @@ function formToMode(modeForm: Record<InventoryModeKey, string>) {
 
     return mode;
   }, {});
+}
+
+function hasSelectedMode(
+  modeForm: Partial<Record<InventoryModeKey, string>>,
+  key: InventoryModeKey
+) {
+  return modeForm[key] !== undefined;
 }
 
 export default function Inventory() {
@@ -335,8 +339,59 @@ export default function Inventory() {
               <Text style={[styles.modeTitle, { color: colors.text }]}>
                 Mode
               </Text>
-              <View style={styles.modeGrid}>
+              <View style={styles.modeKeyGrid}>
                 {INVENTORY_MODE_KEYS.map((modeKey) => (
+                  <TouchableOpacity
+                    key={modeKey}
+                    style={[
+                      styles.modeKeyBtn,
+                      {
+                        backgroundColor: hasSelectedMode(form.mode, modeKey)
+                          ? colors.navActive
+                          : colors.surfaceMuted,
+                      },
+                    ]}
+                    onPress={() =>
+                      setForm((prev) => {
+                        const nextMode = { ...prev.mode };
+
+                        if (hasSelectedMode(nextMode, modeKey)) {
+                          delete nextMode[modeKey];
+                        } else {
+                          nextMode[modeKey] = "";
+                        }
+
+                        return {
+                          ...prev,
+                          mode: nextMode,
+                        };
+                      })
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.modeKeyText,
+                        {
+                          color:
+                            hasSelectedMode(form.mode, modeKey) &&
+                            colors.navActive === colors.accent
+                              ? "#000"
+                              : hasSelectedMode(form.mode, modeKey)
+                              ? colors.accent
+                              : colors.text,
+                        },
+                      ]}
+                    >
+                      {modeKey}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <View style={styles.modeGrid}>
+                {INVENTORY_MODE_KEYS.filter((modeKey) =>
+                  hasSelectedMode(form.mode, modeKey)
+                ).map((modeKey) => (
                   <View key={modeKey} style={styles.modeInputWrap}>
                     <Text style={[styles.modeLabel, { color: colors.textMuted }]}>
                       {modeKey}
@@ -344,7 +399,7 @@ export default function Inventory() {
                     <TextInput
                       placeholder="Value"
                       placeholderTextColor="#999"
-                      value={form.mode[modeKey]}
+                      value={form.mode[modeKey] || ""}
                       onChangeText={(text) =>
                         setForm((prev) => ({
                           ...prev,
@@ -614,6 +669,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+  },
+
+  modeKeyGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 10,
+  },
+
+  modeKeyBtn: {
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+
+  modeKeyText: {
+    fontFamily: "JetBrains",
+    fontSize: 12,
+    fontWeight: "400",
   },
 
   modeInputWrap: {
