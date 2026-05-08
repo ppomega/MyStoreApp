@@ -37,8 +37,6 @@ type OrderLine = {
   price: number;
 };
 
-type ModeInputValues = Record<string, string>;
-
 function isInventoryModeKey(name: string): name is InventoryModeKey {
   return INVENTORY_MODE_KEYS.includes(name as InventoryModeKey);
 }
@@ -69,32 +67,6 @@ function toNumber(value: string) {
 
 function getOrderItemKey(itemId: string, mode: InventoryMode) {
   return `${itemId}::${JSON.stringify(mode)}`;
-}
-
-function createEmptyModeInputValues(mode: InventoryItem["mode"]) {
-  return getModeEntries(mode).reduce<ModeInputValues>((values, [name]) => {
-    values[name] = "";
-    return values;
-  }, {});
-}
-
-function createModeInputValues(mode: InventoryItem["mode"] | InventoryMode) {
-  return getModeEntries(mode).reduce<ModeInputValues>((values, [name, value]) => {
-    values[name] = String(value);
-    return values;
-  }, {});
-}
-
-function toModeMap(modeValues: ModeInputValues) {
-  return Object.entries(modeValues).reduce<InventoryMode>((mode, [name, value]) => {
-    const amount = Number(value);
-
-    if (isInventoryModeKey(name) && !Number.isNaN(amount)) {
-      mode[name] = amount;
-    }
-
-    return mode;
-  }, {});
 }
 
 function groupOrderItems<T extends OrderItem>(items: T[]) {
@@ -131,8 +103,6 @@ export default function Orders() {
   const [vendorName, setVendorName] = useState("");
   const [orderType, setOrderType] = useState<"Shop" | "Customer">("Shop");
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
-  const [selectedModeValues, setSelectedModeValues] =
-    useState<ModeInputValues>({});
   const [quantity, setQuantity] = useState("1");
   const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -194,7 +164,6 @@ export default function Orders() {
 
   const handleSelectItem = (item: InventoryItem) => {
     setSelectedItem(item);
-    setSelectedModeValues(createEmptyModeInputValues(item.mode));
     setPickerVisible(false);
   };
 
@@ -208,30 +177,11 @@ export default function Orders() {
       return;
     }
 
-    const selectedModeMap = toModeMap(selectedModeValues);
-    const missingModeValue = getModeEntries(selectedItem.mode).some(
-      ([name]) => !selectedModeValues[name]?.trim()
-    );
-
-    if (missingModeValue) {
-      Alert.alert("Missing mode value", "Please enter values for all modes.");
-      return;
-    }
-
-    const invalidModeValue = getModeEntries(selectedItem.mode).some(([name]) =>
-      Number.isNaN(Number(selectedModeValues[name]))
-    );
-
-    if (invalidModeValue) {
-      Alert.alert("Invalid mode value", "Mode values must be numbers.");
-      return;
-    }
-
     setOrderLines((prev) => {
       const existingLine = prev.find(
         (line) =>
           getOrderItemKey(line.itemId, line.mode) ===
-          getOrderItemKey(selectedItem.id, selectedModeMap)
+          getOrderItemKey(selectedItem.id, selectedItem.mode)
       );
 
       if (existingLine) {
@@ -252,7 +202,7 @@ export default function Orders() {
           id: `${selectedItem.id}-${Date.now()}`,
           itemId: selectedItem.id,
           itemName: selectedItem.name,
-          mode: selectedModeMap,
+          mode: selectedItem.mode,
           quantity: selectedQuantity,
           price: selectedPrice,
         },
@@ -260,7 +210,6 @@ export default function Orders() {
     });
 
     setSelectedItem(null);
-    setSelectedModeValues({});
     setQuantity("1");
   };
 
@@ -280,7 +229,6 @@ export default function Orders() {
     }
 
     setSelectedItem(inventoryItem);
-    setSelectedModeValues(createModeInputValues(line.mode));
     setQuantity(String(line.quantity));
     removeLine(line.id);
   };
@@ -290,7 +238,6 @@ export default function Orders() {
     setVendorName("");
     setOrderType("Shop");
     setSelectedItem(null);
-    setSelectedModeValues({});
     setQuantity("1");
     setEditingOrder(null);
   };
@@ -310,7 +257,6 @@ export default function Orders() {
       }))
     );
     setSelectedItem(null);
-    setSelectedModeValues({});
     setQuantity("1");
     setActiveView("new");
     setSuccessMessage("");
@@ -665,33 +611,22 @@ export default function Orders() {
               <Icon name="chevron-down" size={14} color={colors.textMuted} />
             </TouchableOpacity>
 
-            {selectedItemModeNames.length > 0 ? (
-              <View style={styles.modeInputGrid}>
-                {selectedItemModeNames.map((modeName) => (
-                  <View key={modeName} style={styles.modeInputWrap}>
-                    <Text style={[styles.selectorLabel, { color: colors.textMuted }]}>
+            {selectedItem && selectedItemModeNames.length > 0 ? (
+              <View style={styles.modeDisplayGrid}>
+                {getModeEntries(selectedItem.mode).map(([modeName, value]) => (
+                  <View
+                    key={modeName}
+                    style={[
+                      styles.modeDisplayChip,
+                      { backgroundColor: colors.surfaceMuted },
+                    ]}
+                  >
+                    <Text style={[styles.modeDisplayLabel, { color: colors.textMuted }]}>
                       {modeName}
                     </Text>
-                    <TextInput
-                      value={selectedModeValues[modeName] || ""}
-                      onChangeText={(text) =>
-                        setSelectedModeValues((prev) => ({
-                          ...prev,
-                          [modeName]: text,
-                        }))
-                      }
-                      keyboardType="numeric"
-                      placeholder="Value"
-                      placeholderTextColor="#999"
-                      style={[
-                        styles.modeValueInput,
-                        {
-                          backgroundColor: colors.input,
-                          borderColor: colors.border,
-                          color: colors.text,
-                        },
-                      ]}
-                    />
+                    <Text style={[styles.modeDisplayValue, { color: colors.text }]}>
+                      {value}
+                    </Text>
                   </View>
                 ))}
               </View>
@@ -1019,21 +954,27 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 12,
   },
-  modeInputGrid: {
+  modeDisplayGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
+    gap: 8,
     marginTop: 12,
   },
-  modeInputWrap: {
-    minWidth: "30%",
-  },
-  modeValueInput: {
+  modeDisplayChip: {
     borderRadius: 8,
-    borderWidth: 1,
-    fontFamily: "JetBrains",
-    height: 40,
+    minWidth: "30%",
     paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  modeDisplayLabel: {
+    fontFamily: "JetBrains",
+    fontSize: 11,
+    marginBottom: 3,
+  },
+  modeDisplayValue: {
+    fontFamily: "JetBrains",
+    fontSize: 13,
+    fontWeight: "400",
   },
   modeChip: {
     backgroundColor: "#f4f4f4",
