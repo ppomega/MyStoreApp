@@ -1,10 +1,14 @@
 import axios from "axios";
-import type { InventoryMode } from "./inventoryApi";
+import {
+  INVENTORY_MODE_KEYS,
+  type InventoryMode,
+  type InventoryModeKey,
+} from "./inventoryApi";
 
 export type OrderItem = {
   itemId: string;
   itemName: string;
-  mode: InventoryMode;
+  mode: InventoryModeKey;
   quantity: number;
   price: number;
 };
@@ -31,7 +35,9 @@ export type OrderInput = {
 type OrderApiItem = {
   _id?: string;
   items?: Array<
-    Omit<OrderItem, "mode"> & { mode?: InventoryMode | InventoryMode[] }
+    Omit<OrderItem, "mode"> & {
+      mode?: InventoryModeKey | InventoryMode | InventoryMode[];
+    }
   >;
   estimatedTotal?: string | number;
   vendor?: string;
@@ -57,6 +63,21 @@ function toNumber(value: string | number | undefined) {
   return Number.isNaN(amount) ? 0 : amount;
 }
 
+function normalizeOrderItemMode(
+  mode: InventoryModeKey | InventoryMode | InventoryMode[] | undefined
+): InventoryModeKey {
+  if (typeof mode === "string" && INVENTORY_MODE_KEYS.includes(mode)) {
+    return mode;
+  }
+
+  const modeMap = Array.isArray(mode) ? Object.assign({}, ...mode) : mode || {};
+  const firstMode = Object.keys(modeMap).find((key) =>
+    INVENTORY_MODE_KEYS.includes(key as InventoryModeKey)
+  );
+
+  return (firstMode as InventoryModeKey | undefined) || "Piece";
+}
+
 function normalizeOrderItems(
   items: OrderApiItem["items"] | undefined
 ): OrderItem[] {
@@ -64,9 +85,7 @@ function normalizeOrderItems(
     ? items.map((item) => ({
         itemId: item.itemId,
         itemName: item.itemName,
-        mode: Array.isArray(item.mode)
-          ? Object.assign({}, ...item.mode)
-          : item.mode || {},
+        mode: normalizeOrderItemMode(item.mode),
         quantity: item.quantity,
         price: item.price,
       }))

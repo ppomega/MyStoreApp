@@ -18,7 +18,9 @@ import {
   createInventoryItem,
   deleteInventoryItem,
   getInventoryItems,
-  INVENTORY_MODE_KEYS,
+  getInventoryModePrice,
+  getInventoryModeRankGroup,
+  INVENTORY_MODE_RANK_GROUPS,
   InventoryItem,
   InventoryItemInput,
   InventoryMode,
@@ -36,7 +38,9 @@ const emptyForm: InventoryForm = {
   sellingPrice: "",
   buyingPrice: "",
   mode: {},
+  defaultMode: "Piece",
   category: "",
+  weight: "",
 };
 
 const formFields: Array<{
@@ -50,15 +54,18 @@ const formFields: Array<{
   { label: "Category", key: "category" },
 ];
 
+const RANKED_MODE_KEYS = INVENTORY_MODE_RANK_GROUPS.flat();
+
 function formatMode(mode: InventoryItem["mode"]) {
-  return Object.entries(mode)
-    .map(([name, value]) => (name ? `${name}: ${value}` : ""))
+  return RANKED_MODE_KEYS.map((name) =>
+    mode[name] !== undefined ? `${name}: ${mode[name]}` : ""
+  )
     .filter(Boolean)
     .join(", ");
 }
 
 function modeToForm(mode: InventoryMode) {
-  return INVENTORY_MODE_KEYS.reduce<Partial<Record<InventoryModeKey, string>>>(
+  return RANKED_MODE_KEYS.reduce<Partial<Record<InventoryModeKey, string>>>(
     (formMode, key) => {
       if (mode[key] !== undefined) {
         formMode[key] = String(mode[key]);
@@ -70,7 +77,7 @@ function modeToForm(mode: InventoryMode) {
 }
 
 function formToMode(modeForm: Partial<Record<InventoryModeKey, string>>) {
-  return INVENTORY_MODE_KEYS.reduce<InventoryMode>((mode, key) => {
+  return RANKED_MODE_KEYS.reduce<InventoryMode>((mode, key) => {
     const value = modeForm[key]?.trim();
 
     if (!value) {
@@ -85,6 +92,39 @@ function formToMode(modeForm: Partial<Record<InventoryModeKey, string>>) {
 
     return mode;
   }, {});
+}
+
+function convertPriceForDefaultMode(
+  price: string,
+  modeForm: Partial<Record<InventoryModeKey, string>>,
+  previousDefaultMode: InventoryModeKey,
+  nextDefaultMode: InventoryModeKey
+) {
+  const convertedPrice = getInventoryModePrice(
+    price,
+    modeForm,
+    previousDefaultMode,
+    nextDefaultMode
+  );
+
+  return convertedPrice ? String(convertedPrice) : price;
+}
+
+function getFirstSelectedMode(modeForm: Partial<Record<InventoryModeKey, string>>) {
+  return RANKED_MODE_KEYS.find((key) => hasSelectedMode(modeForm, key));
+}
+
+function getSelectedModeKeys(modeForm: Partial<Record<InventoryModeKey, string>>) {
+  return RANKED_MODE_KEYS.filter((key) => hasSelectedMode(modeForm, key));
+}
+
+function getInvalidModeValue(modeForm: Partial<Record<InventoryModeKey, string>>) {
+  return getSelectedModeKeys(modeForm).find((key) => {
+    const value = modeForm[key]?.trim();
+    const amount = Number(value);
+
+    return !value || Number.isNaN(amount) || amount <= 0;
+  });
 }
 
 function hasSelectedMode(
@@ -115,7 +155,7 @@ export default function Inventory() {
       setError("");
       const items = await getInventoryItems();
       setData(items);
-    } catch (loadError) {
+    } catch {
       setError("Could not load inventory from the server.");
     } finally {
       setLoading(false);
@@ -138,13 +178,37 @@ export default function Inventory() {
       return;
     }
 
+    const firstSelectedMode = getFirstSelectedMode(form.mode);
+
+    if (!firstSelectedMode) {
+      Alert.alert("Missing mode", "Please choose at least one mode.");
+      return;
+    }
+
+    if (!hasSelectedMode(form.mode, form.defaultMode)) {
+      Alert.alert("Missing default mode", "Please choose a selected mode as default.");
+      return;
+    }
+
+    const invalidModeValue = getInvalidModeValue(form.mode);
+
+    if (invalidModeValue) {
+      Alert.alert(
+        "Missing mode value",
+        `Please enter a positive value for ${invalidModeValue}.`
+      );
+      return;
+    }
+
+    const modePayload = formToMode(form.mode);
+
     try {
       setSaving(true);
 
       if (editingItem) {
         const updatedItem = await updateInventoryItem(editingItem.id, {
           ...form,
-          mode: formToMode(form.mode),
+          mode: modePayload,
         });
         setData((prev) =>
           prev.map((item) => (item.id === editingItem.id ? updatedItem : item))
@@ -152,7 +216,7 @@ export default function Inventory() {
       } else {
         const createdItem = await createInventoryItem({
           ...form,
-          mode: formToMode(form.mode),
+          mode: modePayload,
         });
         setData((prev) => [createdItem, ...prev]);
       }
@@ -160,7 +224,7 @@ export default function Inventory() {
       setForm(emptyForm);
       setEditingItem(null);
       setModalVisible(false);
-    } catch (saveError) {
+    } catch {
       Alert.alert("Save failed", "Could not save the inventory item.");
     } finally {
       setSaving(false);
@@ -173,7 +237,7 @@ export default function Inventory() {
       setData((prev) => prev.filter((item) => item.id !== id));
       setPendingDeleteItem(null);
       setSuccessMessage("Inventory item deleted.");
-    } catch (deleteError) {
+    } catch {
       Alert.alert("Delete failed", "Could not delete the inventory item.");
     }
   };
@@ -183,10 +247,14 @@ export default function Inventory() {
   };
 
   const handleEdit = (item: InventoryItem) => {
-    const { id, ...itemForm } = item;
     setForm({
-      ...itemForm,
+      name: item.name,
+      sellingPrice: item.sellingPrice,
+      buyingPrice: item.buyingPrice,
+      category: item.category,
+      weight: item.weight,
       mode: modeToForm(item.mode),
+      defaultMode: item.defaultMode,
     });
     setEditingItem(item);
     setModalVisible(true);
@@ -205,7 +273,7 @@ export default function Inventory() {
           {item.name}
         </Text>
         <Text style={[styles.category, { color: colors.textMuted }]} numberOfLines={1}>
-          {item.category}
+          {[item.category, item.weight].filter(Boolean).join(" - ")}
         </Text>
       </View>
 
@@ -221,9 +289,14 @@ export default function Inventory() {
         </View>
 
         {Object.keys(item.mode).length > 0 ? (
-          <Text style={[styles.mode, { color: colors.textMuted }]} numberOfLines={3}>
-            {formatMode(item.mode)}
-          </Text>
+          <>
+            <Text style={[styles.mode, { color: colors.textMuted }]} numberOfLines={3}>
+              {formatMode(item.mode)}
+            </Text>
+            <Text style={[styles.mode, { color: colors.textMuted }]} numberOfLines={1}>
+              Default: {item.defaultMode}
+            </Text>
+          </>
         ) : null}
       </View>
 
@@ -340,58 +413,172 @@ export default function Inventory() {
                 Mode
               </Text>
               <View style={styles.modeKeyGrid}>
-                {INVENTORY_MODE_KEYS.map((modeKey) => (
-                  <TouchableOpacity
-                    key={modeKey}
-                    style={[
-                      styles.modeKeyBtn,
-                      {
-                        backgroundColor: hasSelectedMode(form.mode, modeKey)
-                          ? colors.navActive
-                          : colors.surfaceMuted,
-                      },
-                    ]}
-                    onPress={() =>
-                      setForm((prev) => {
-                        const nextMode = { ...prev.mode };
+                {INVENTORY_MODE_RANK_GROUPS.map((rankGroup, rankIndex) => (
+                  <View key={rankIndex} style={styles.modeRankGroup}>
+                    {rankGroup.map((modeKey) => (
+                      <TouchableOpacity
+                        key={modeKey}
+                        style={[
+                          styles.modeKeyBtn,
+                          {
+                            backgroundColor: hasSelectedMode(form.mode, modeKey)
+                              ? colors.navActive
+                              : colors.surfaceMuted,
+                          },
+                        ]}
+                        onPress={() =>
+                          setForm((prev) => {
+                            const nextMode = { ...prev.mode };
 
-                        if (hasSelectedMode(nextMode, modeKey)) {
-                          delete nextMode[modeKey];
-                        } else {
-                          nextMode[modeKey] = "";
+                            if (hasSelectedMode(nextMode, modeKey)) {
+                              delete nextMode[modeKey];
+                            } else {
+                              getInventoryModeRankGroup(modeKey).forEach(
+                                (groupModeKey) => {
+                                  delete nextMode[groupModeKey];
+                                }
+                              );
+                              nextMode[modeKey] = "";
+                            }
+
+                            const hasLooseMode = hasSelectedMode(nextMode, "Loose");
+                            const nextDefaultMode = hasSelectedMode(
+                              nextMode,
+                              prev.defaultMode
+                            )
+                              ? prev.defaultMode
+                              : getFirstSelectedMode(nextMode) || modeKey;
+
+                            const defaultModeChanged =
+                              nextDefaultMode !== prev.defaultMode;
+
+                            return {
+                              ...prev,
+                              mode: nextMode,
+                              buyingPrice: defaultModeChanged
+                                ? convertPriceForDefaultMode(
+                                    prev.buyingPrice,
+                                    prev.mode,
+                                    prev.defaultMode,
+                                    nextDefaultMode
+                                  )
+                                : prev.buyingPrice,
+                              sellingPrice: defaultModeChanged
+                                ? convertPriceForDefaultMode(
+                                    prev.sellingPrice,
+                                    prev.mode,
+                                    prev.defaultMode,
+                                    nextDefaultMode
+                                  )
+                                : prev.sellingPrice,
+                              defaultMode: nextDefaultMode,
+                              weight: hasLooseMode ? prev.weight : "",
+                            };
+                          })
                         }
-
-                        return {
-                          ...prev,
-                          mode: nextMode,
-                        };
-                      })
-                    }
-                  >
-                    <Text
-                      style={[
-                        styles.modeKeyText,
-                        {
-                          color:
-                            hasSelectedMode(form.mode, modeKey) &&
-                            colors.navActive === colors.accent
-                              ? "#000"
-                              : hasSelectedMode(form.mode, modeKey)
-                              ? colors.accent
-                              : colors.text,
-                        },
-                      ]}
-                    >
-                      {modeKey}
-                    </Text>
-                  </TouchableOpacity>
+                      >
+                        <Text
+                          style={[
+                            styles.modeKeyText,
+                            {
+                              color:
+                                hasSelectedMode(form.mode, modeKey) &&
+                                colors.navActive === colors.accent
+                                  ? "#000"
+                                  : hasSelectedMode(form.mode, modeKey)
+                                  ? colors.accent
+                                  : colors.text,
+                            },
+                          ]}
+                        >
+                          {modeKey}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                 ))}
               </View>
 
+              {hasSelectedMode(form.mode, "Loose") ? (
+                <TextInput
+                  placeholder="Weight"
+                  placeholderTextColor="#999"
+                  value={form.weight}
+                  onChangeText={(text) =>
+                    setForm((prev) => ({ ...prev, weight: text }))
+                  }
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.input,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                />
+              ) : null}
+
+              {getFirstSelectedMode(form.mode) ? (
+                <>
+                  <Text style={[styles.modeTitle, { color: colors.text }]}>
+                    Default Mode
+                  </Text>
+                  <View style={styles.modeKeyGrid}>
+                    {getSelectedModeKeys(form.mode).map((modeKey) => (
+                      <TouchableOpacity
+                        key={modeKey}
+                        style={[
+                          styles.modeKeyBtn,
+                          {
+                            backgroundColor:
+                              form.defaultMode === modeKey
+                                ? colors.navActive
+                                : colors.surfaceMuted,
+                          },
+                        ]}
+                        onPress={() =>
+                          setForm((prev) => ({
+                            ...prev,
+                            buyingPrice: convertPriceForDefaultMode(
+                              prev.buyingPrice,
+                              prev.mode,
+                              prev.defaultMode,
+                              modeKey
+                            ),
+                            sellingPrice: convertPriceForDefaultMode(
+                              prev.sellingPrice,
+                              prev.mode,
+                              prev.defaultMode,
+                              modeKey
+                            ),
+                            defaultMode: modeKey,
+                          }))
+                        }
+                      >
+                        <Text
+                          style={[
+                            styles.modeKeyText,
+                            {
+                              color:
+                                form.defaultMode === modeKey &&
+                                colors.navActive === colors.accent
+                                  ? "#000"
+                                  : form.defaultMode === modeKey
+                                  ? colors.accent
+                                  : colors.text,
+                            },
+                          ]}
+                        >
+                          {modeKey}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              ) : null}
+
               <View style={styles.modeGrid}>
-                {INVENTORY_MODE_KEYS.filter((modeKey) =>
-                  hasSelectedMode(form.mode, modeKey)
-                ).map((modeKey) => (
+                {getSelectedModeKeys(form.mode).map((modeKey) => (
                   <View key={modeKey} style={styles.modeInputWrap}>
                     <Text style={[styles.modeLabel, { color: colors.textMuted }]}>
                       {modeKey}
@@ -676,6 +863,14 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
     marginBottom: 10,
+  },
+
+  modeRankGroup: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 8,
+    width: "100%",
   },
 
   modeKeyBtn: {

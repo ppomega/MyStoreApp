@@ -13,6 +13,7 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome";
 import {
   getInventoryItems,
+  getInventoryModePrice,
   INVENTORY_MODE_KEYS,
   InventoryItem,
   InventoryMode,
@@ -32,7 +33,7 @@ type OrderLine = {
   id: string;
   itemId: string;
   itemName: string;
-  mode: InventoryMode;
+  mode: InventoryModeKey;
   quantity: number;
   price: number;
 };
@@ -47,26 +48,28 @@ function getModeEntries(mode: InventoryItem["mode"] | InventoryMode) {
   return Object.entries(modeMap).filter(
     (entry): entry is [InventoryModeKey, number] =>
       isInventoryModeKey(entry[0]) && typeof entry[1] === "number"
+  ).sort(
+    ([leftMode], [rightMode]) =>
+      INVENTORY_MODE_KEYS.indexOf(leftMode) -
+      INVENTORY_MODE_KEYS.indexOf(rightMode)
   );
 }
 
-function formatMode(mode: InventoryItem["mode"] | InventoryMode) {
-  return getModeEntries(mode)
-    .map(([name, value]) => `${name}: ${value}`)
-    .filter(Boolean);
+function formatOrderMode(mode: InventoryModeKey) {
+  return mode;
 }
 
-function formatModeText(mode: InventoryItem["mode"] | InventoryMode) {
-  return formatMode(mode).join(", ");
+function getOrderItemKey(itemId: string, mode: InventoryModeKey) {
+  return `${itemId}::${mode}`;
 }
 
-function toNumber(value: string) {
-  const amount = Number(value);
-  return Number.isNaN(amount) ? 0 : amount;
-}
-
-function getOrderItemKey(itemId: string, mode: InventoryMode) {
-  return `${itemId}::${JSON.stringify(mode)}`;
+function getModePrice(
+  basePrice: string,
+  mode: InventoryMode,
+  defaultMode: InventoryModeKey,
+  selectedMode: InventoryModeKey
+) {
+  return getInventoryModePrice(basePrice, mode, defaultMode, selectedMode);
 }
 
 function groupOrderItems<T extends OrderItem>(items: T[]) {
@@ -103,6 +106,8 @@ export default function Orders() {
   const [vendorName, setVendorName] = useState("");
   const [orderType, setOrderType] = useState<"Shop" | "Customer">("Shop");
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [selectedOrderMode, setSelectedOrderMode] =
+    useState<InventoryModeKey | null>(null);
   const [quantity, setQuantity] = useState("1");
   const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -143,7 +148,20 @@ export default function Orders() {
   const selectedItemModeNames = selectedItem
     ? getModeEntries(selectedItem.mode).map(([name]) => name)
     : [];
-  const selectedPrice = selectedItem ? toNumber(selectedItem.buyingPrice) : 0;
+  const selectedBasePrice = selectedItem
+    ? orderType === "Customer"
+      ? selectedItem.sellingPrice
+      : selectedItem.buyingPrice
+    : "0";
+  const selectedPrice =
+    selectedItem && selectedOrderMode
+      ? getModePrice(
+          selectedBasePrice,
+          selectedItem.mode,
+          selectedItem.defaultMode,
+          selectedOrderMode
+        )
+      : 0;
   const selectedQuantity = Math.max(1, Number(quantity) || 1);
   const previewTotal = selectedPrice * selectedQuantity;
 
@@ -164,6 +182,7 @@ export default function Orders() {
 
   const handleSelectItem = (item: InventoryItem) => {
     setSelectedItem(item);
+    setSelectedOrderMode(item.defaultMode);
     setPickerVisible(false);
   };
 
@@ -172,16 +191,18 @@ export default function Orders() {
   };
 
   const addLine = () => {
-    if (!selectedItem) {
+    if (!selectedItem || !selectedOrderMode) {
       Alert.alert("Select item", "Please select an item for the order.");
       return;
     }
+
+    const orderMode = selectedOrderMode;
 
     setOrderLines((prev) => {
       const existingLine = prev.find(
         (line) =>
           getOrderItemKey(line.itemId, line.mode) ===
-          getOrderItemKey(selectedItem.id, selectedItem.mode)
+          getOrderItemKey(selectedItem.id, orderMode)
       );
 
       if (existingLine) {
@@ -202,7 +223,7 @@ export default function Orders() {
           id: `${selectedItem.id}-${Date.now()}`,
           itemId: selectedItem.id,
           itemName: selectedItem.name,
-          mode: selectedItem.mode,
+          mode: orderMode,
           quantity: selectedQuantity,
           price: selectedPrice,
         },
@@ -210,6 +231,7 @@ export default function Orders() {
     });
 
     setSelectedItem(null);
+    setSelectedOrderMode(null);
     setQuantity("1");
   };
 
@@ -229,6 +251,7 @@ export default function Orders() {
     }
 
     setSelectedItem(inventoryItem);
+    setSelectedOrderMode(line.mode);
     setQuantity(String(line.quantity));
     removeLine(line.id);
   };
@@ -238,6 +261,7 @@ export default function Orders() {
     setVendorName("");
     setOrderType("Shop");
     setSelectedItem(null);
+    setSelectedOrderMode(null);
     setQuantity("1");
     setEditingOrder(null);
   };
@@ -257,6 +281,7 @@ export default function Orders() {
       }))
     );
     setSelectedItem(null);
+    setSelectedOrderMode(null);
     setQuantity("1");
     setActiveView("new");
     setSuccessMessage("");
@@ -491,9 +516,7 @@ export default function Orders() {
                     </Text>
                     <Text style={[styles.lineMeta, { color: colors.textMuted }]}>
                       {item.quantity} x Rs {item.price}
-                      {formatModeText(item.mode)
-                        ? ` - ${formatModeText(item.mode)}`
-                        : ""}
+                      {item.mode ? ` - ${formatOrderMode(item.mode)}` : ""}
                     </Text>
                   </View>
                 ))}
@@ -614,20 +637,38 @@ export default function Orders() {
             {selectedItem && selectedItemModeNames.length > 0 ? (
               <View style={styles.modeDisplayGrid}>
                 {getModeEntries(selectedItem.mode).map(([modeName, value]) => (
-                  <View
+                  <TouchableOpacity
                     key={modeName}
                     style={[
                       styles.modeDisplayChip,
-                      { backgroundColor: colors.surfaceMuted },
+                      {
+                        backgroundColor:
+                          selectedOrderMode === modeName
+                            ? colors.navActive
+                            : colors.surfaceMuted,
+                      },
                     ]}
+                    onPress={() => setSelectedOrderMode(modeName)}
                   >
                     <Text style={[styles.modeDisplayLabel, { color: colors.textMuted }]}>
                       {modeName}
+                      {selectedItem.defaultMode === modeName ? " default" : ""}
                     </Text>
-                    <Text style={[styles.modeDisplayValue, { color: colors.text }]}>
+                    <Text
+                      style={[
+                        styles.modeDisplayValue,
+                        {
+                          color:
+                            selectedOrderMode === modeName &&
+                            colors.navActive === colors.accent
+                              ? "#000"
+                              : colors.text,
+                        },
+                      ]}
+                    >
                       {value}
                     </Text>
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             ) : null}
@@ -689,9 +730,7 @@ export default function Orders() {
                     </Text>
                     <Text style={[styles.lineMeta, { color: colors.textMuted }]}>
                       {line.quantity} x Rs {line.price}
-                      {formatModeText(line.mode)
-                        ? ` - ${formatModeText(line.mode)}`
-                        : ""}
+                      {line.mode ? ` - ${formatOrderMode(line.mode)}` : ""}
                     </Text>
                   </View>
 
@@ -792,7 +831,7 @@ export default function Orders() {
                     </Text>
                   </View>
                   <Text style={styles.pickerItemPrice}>
-                    Rs {item.buyingPrice}
+                    Rs {orderType === "Customer" ? item.sellingPrice : item.buyingPrice}
                   </Text>
                 </TouchableOpacity>
               ))}
