@@ -12,6 +12,7 @@ export type Order = {
   mongoId: string;
   items: OrderItem[];
   estimatedTotal: number;
+  vendor: string;
   status: string;
   type: string;
   createdAt: string;
@@ -21,6 +22,7 @@ export type Order = {
 export type OrderInput = {
   items: OrderItem[];
   estimatedTotal: number;
+  vendor: string;
   status: string;
   type: string;
 };
@@ -29,6 +31,7 @@ type OrderApiItem = {
   _id?: string;
   items?: OrderItem[];
   estimatedTotal?: string | number;
+  vendor?: string;
   status?: string;
   type?: string;
   createdAt?: string;
@@ -56,6 +59,7 @@ function normalizeOrder(order: OrderApiItem): Order {
     mongoId: order._id || "",
     items: Array.isArray(order.items) ? order.items : [],
     estimatedTotal: toNumber(order.estimatedTotal),
+    vendor: order.vendor || "",
     status: order.status || "",
     type: order.type || "",
     createdAt: order.createdAt || "",
@@ -86,6 +90,7 @@ export async function createOrder(order: OrderInput) {
   const response = await api.post<OrderApiResponse>("/orders", {
     items: order.items,
     estimatedTotal: order.estimatedTotal,
+    vendor: order.vendor,
     status: order.status,
     type: order.type,
   });
@@ -98,6 +103,7 @@ export async function updateOrder(mongoId: string, order: Partial<OrderInput>) {
     ...(order.estimatedTotal !== undefined
       ? { estimatedTotal: order.estimatedTotal }
       : {}),
+    ...(order.vendor ? { vendor: order.vendor } : {}),
     ...(order.status ? { status: order.status } : {}),
     ...(order.type ? { type: order.type } : {}),
   });

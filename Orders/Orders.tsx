@@ -159,11 +159,17 @@ export default function Orders() {
       return;
     }
 
+    if (!vendorName.trim()) {
+      Alert.alert("Missing vendor", "Please enter a vendor name.");
+      return;
+    }
+
     try {
       setSaving(true);
       const createdOrder = await createOrder({
         items: orderLines.map(({ id: _id, ...line }) => line),
         estimatedTotal: orderTotal,
+        vendor: vendorName.trim(),
         status: "Completed",
         type: orderType,
       });
@@ -275,9 +281,10 @@ export default function Orders() {
                 <View style={styles.historyCardHeader}>
                   <View>
                     <Text style={[styles.historyTitle, { color: colors.text }]}>
-                      {order.type || "Order"}
+                      {order.vendor || order.type || "Order"}
                     </Text>
                     <Text style={[styles.historyText, { color: colors.textMuted }]}>
+                      {order.type ? `${order.type} - ` : ""}
                       {formatDate(order.createdAt)}
                     </Text>
                   </View>
