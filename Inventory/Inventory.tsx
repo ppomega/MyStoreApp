@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -27,26 +28,30 @@ import {
 import { useAppTheme } from "../theme/ThemeContext";
 
 type InventoryForm = Omit<InventoryItemInput, "mode"> & {
-  mode: string;
+  mode: Record<InventoryModeKey, string>;
 };
+
+const emptyModeForm = INVENTORY_MODE_KEYS.reduce(
+  (mode, key) => ({ ...mode, [key]: "" }),
+  {} as Record<InventoryModeKey, string>
+);
 
 const emptyForm: InventoryForm = {
   name: "",
   sellingPrice: "",
   buyingPrice: "",
-  mode: "",
+  mode: emptyModeForm,
   category: "",
 };
 
 const formFields: Array<{
   label: string;
-  key: keyof InventoryForm;
+  key: keyof Omit<InventoryForm, "mode">;
   keyboardType?: "default" | "numeric";
 }> = [
   { label: "Name", key: "name" },
   { label: "Selling Price", key: "sellingPrice", keyboardType: "numeric" },
   { label: "Buying Price", key: "buyingPrice", keyboardType: "numeric" },
-  { label: "Mode (Packet: 1, Ladi: 10)", key: "mode" },
   { label: "Category", key: "category" },
 ];
 
@@ -57,21 +62,30 @@ function formatMode(mode: InventoryItem["mode"]) {
     .join(", ");
 }
 
-function parseMode(modeText: string) {
-  return modeText.split(",").reduce<InventoryMode>((mode, entry) => {
-    const [rawName, rawValue] = entry.split(":");
-    const name = rawName?.trim();
-    const value = Number(rawValue?.trim());
+function modeToForm(mode: InventoryMode) {
+  return INVENTORY_MODE_KEYS.reduce<Record<InventoryModeKey, string>>(
+    (formMode, key) => {
+      formMode[key] = mode[key] === undefined ? "" : String(mode[key]);
+      return formMode;
+    },
+    { ...emptyModeForm }
+  );
+}
 
-    if (
-      !name ||
-      !INVENTORY_MODE_KEYS.includes(name as InventoryModeKey) ||
-      Number.isNaN(value)
-    ) {
+function formToMode(modeForm: Record<InventoryModeKey, string>) {
+  return INVENTORY_MODE_KEYS.reduce<InventoryMode>((mode, key) => {
+    const value = modeForm[key].trim();
+
+    if (!value) {
       return mode;
     }
 
-    mode[name as InventoryModeKey] = value;
+    const amount = Number(value);
+
+    if (!Number.isNaN(amount)) {
+      mode[key] = amount;
+    }
+
     return mode;
   }, {});
 }
@@ -126,7 +140,7 @@ export default function Inventory() {
       if (editingItem) {
         const updatedItem = await updateInventoryItem(editingItem.id, {
           ...form,
-          mode: parseMode(form.mode),
+          mode: formToMode(form.mode),
         });
         setData((prev) =>
           prev.map((item) => (item.id === editingItem.id ? updatedItem : item))
@@ -134,7 +148,7 @@ export default function Inventory() {
       } else {
         const createdItem = await createInventoryItem({
           ...form,
-          mode: parseMode(form.mode),
+          mode: formToMode(form.mode),
         });
         setData((prev) => [createdItem, ...prev]);
       }
@@ -168,7 +182,7 @@ export default function Inventory() {
     const { id, ...itemForm } = item;
     setForm({
       ...itemForm,
-      mode: formatMode(item.mode),
+      mode: modeToForm(item.mode),
     });
     setEditingItem(item);
     setModalVisible(true);
@@ -296,26 +310,65 @@ export default function Inventory() {
               {editingItem ? "Edit Item" : "Add Item"}
             </Text>
 
-            {formFields.map((field) => (
-              <TextInput
-                key={field.key}
-                placeholder={field.label}
-                placeholderTextColor="#999"
-                value={form[field.key]}
-                onChangeText={(text) =>
-                  setForm((prev) => ({ ...prev, [field.key]: text }))
-                }
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.input,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                keyboardType={field.keyboardType || "default"}
-              />
-            ))}
+            <ScrollView keyboardShouldPersistTaps="handled">
+              {formFields.map((field) => (
+                <TextInput
+                  key={field.key}
+                  placeholder={field.label}
+                  placeholderTextColor="#999"
+                  value={form[field.key]}
+                  onChangeText={(text) =>
+                    setForm((prev) => ({ ...prev, [field.key]: text }))
+                  }
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.input,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  keyboardType={field.keyboardType || "default"}
+                />
+              ))}
+
+              <Text style={[styles.modeTitle, { color: colors.text }]}>
+                Mode
+              </Text>
+              <View style={styles.modeGrid}>
+                {INVENTORY_MODE_KEYS.map((modeKey) => (
+                  <View key={modeKey} style={styles.modeInputWrap}>
+                    <Text style={[styles.modeLabel, { color: colors.textMuted }]}>
+                      {modeKey}
+                    </Text>
+                    <TextInput
+                      placeholder="Value"
+                      placeholderTextColor="#999"
+                      value={form.mode[modeKey]}
+                      onChangeText={(text) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          mode: {
+                            ...prev.mode,
+                            [modeKey]: text,
+                          },
+                        }))
+                      }
+                      style={[
+                        styles.input,
+                        styles.modeInput,
+                        {
+                          backgroundColor: colors.input,
+                          borderColor: colors.border,
+                          color: colors.text,
+                        },
+                      ]}
+                      keyboardType="numeric"
+                    />
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
 
             <View style={styles.modalActions}>
               <TouchableOpacity
@@ -547,6 +600,34 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
+  },
+
+  modeTitle: {
+    fontFamily: "JetBrains",
+    fontSize: 14,
+    fontWeight: "400",
+    marginBottom: 8,
+    marginTop: 4,
+  },
+
+  modeGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+
+  modeInputWrap: {
+    width: "48%",
+  },
+
+  modeLabel: {
+    fontFamily: "JetBrains",
+    fontSize: 11,
+    marginBottom: 4,
+  },
+
+  modeInput: {
+    height: 40,
   },
 
   modalActions: {
