@@ -1,13 +1,28 @@
 import axios from "axios";
 
-export type InventoryMode = Record<string, number>;
+export const INVENTORY_MODE_KEYS = [
+  "Loose",
+  "Piece",
+  "Bottle",
+  "Packet",
+  "Ladi",
+  "Set",
+  "Bag",
+  "Katta",
+  "Petti",
+] as const;
+
+export type InventoryModeKey =
+  (typeof INVENTORY_MODE_KEYS)[number];
+
+export type InventoryMode = Partial<Record<InventoryModeKey, number>>;
 
 export type InventoryItem = {
   id: string;
   name: string;
   sellingPrice: string;
   buyingPrice: string;
-  mode: InventoryMode[];
+  mode: InventoryMode;
   category: string;
 };
 
@@ -19,7 +34,7 @@ type InventoryApiItem = {
   name?: string;
   sellingPrice?: string | number;
   buyingPrice?: string | number;
-  mode?: InventoryMode[];
+  mode?: InventoryMode | InventoryMode[];
   category?: string;
 };
 
@@ -28,6 +43,14 @@ const api = axios.create({
   timeout: 10000,
 });
 
+function normalizeMode(mode: InventoryApiItem["mode"]): InventoryMode {
+  if (Array.isArray(mode)) {
+    return Object.assign({}, ...mode);
+  }
+
+  return mode || {};
+}
+
 function normalizeInventoryItem(item: InventoryApiItem): InventoryItem {
   return {
     id: item.id || item._id || "",
@@ -35,7 +58,7 @@ function normalizeInventoryItem(item: InventoryApiItem): InventoryItem {
     sellingPrice:
       item.sellingPrice === undefined ? "" : String(item.sellingPrice),
     buyingPrice: item.buyingPrice === undefined ? "" : String(item.buyingPrice),
-    mode: Array.isArray(item.mode) ? item.mode : [],
+    mode: normalizeMode(item.mode),
     category: item.category || "",
   };
 }

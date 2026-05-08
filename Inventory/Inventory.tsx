@@ -17,8 +17,11 @@ import {
   createInventoryItem,
   deleteInventoryItem,
   getInventoryItems,
+  INVENTORY_MODE_KEYS,
   InventoryItem,
   InventoryItemInput,
+  InventoryMode,
+  InventoryModeKey,
   updateInventoryItem,
 } from "../services/inventoryApi";
 import { useAppTheme } from "../theme/ThemeContext";
@@ -48,30 +51,29 @@ const formFields: Array<{
 ];
 
 function formatMode(mode: InventoryItem["mode"]) {
-  return mode
-    .map((entry) => {
-      const [name, value] = Object.entries(entry)[0] || ["", ""];
-      return name ? `${name}: ${value}` : "";
-    })
+  return Object.entries(mode)
+    .map(([name, value]) => (name ? `${name}: ${value}` : ""))
     .filter(Boolean)
     .join(", ");
 }
 
 function parseMode(modeText: string) {
-  return modeText
-    .split(",")
-    .map((entry) => {
-      const [rawName, rawValue] = entry.split(":");
-      const name = rawName?.trim();
-      const value = Number(rawValue?.trim());
+  return modeText.split(",").reduce<InventoryMode>((mode, entry) => {
+    const [rawName, rawValue] = entry.split(":");
+    const name = rawName?.trim();
+    const value = Number(rawValue?.trim());
 
-      if (!name || Number.isNaN(value)) {
-        return null;
-      }
+    if (
+      !name ||
+      !INVENTORY_MODE_KEYS.includes(name as InventoryModeKey) ||
+      Number.isNaN(value)
+    ) {
+      return mode;
+    }
 
-      return { [name]: value };
-    })
-    .filter((entry): entry is Record<string, number> => Boolean(entry));
+    mode[name as InventoryModeKey] = value;
+    return mode;
+  }, {});
 }
 
 export default function Inventory() {
@@ -200,7 +202,7 @@ export default function Inventory() {
           <Text style={styles.sell}>Rs {item.sellingPrice}</Text>
         </View>
 
-        {item.mode.length > 0 ? (
+        {Object.keys(item.mode).length > 0 ? (
           <Text style={[styles.mode, { color: colors.textMuted }]} numberOfLines={3}>
             {formatMode(item.mode)}
           </Text>

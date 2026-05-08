@@ -1,9 +1,10 @@
 import axios from "axios";
+import type { InventoryMode } from "./inventoryApi";
 
 export type OrderItem = {
   itemId: string;
   itemName: string;
-  mode: string;
+  mode: InventoryMode;
   quantity: number;
   price: number;
 };
@@ -29,7 +30,9 @@ export type OrderInput = {
 
 type OrderApiItem = {
   _id?: string;
-  items?: OrderItem[];
+  items?: Array<
+    Omit<OrderItem, "mode"> & { mode?: InventoryMode | InventoryMode[] }
+  >;
   estimatedTotal?: string | number;
   vendor?: string;
   status?: string;
@@ -54,10 +57,26 @@ function toNumber(value: string | number | undefined) {
   return Number.isNaN(amount) ? 0 : amount;
 }
 
+function normalizeOrderItems(
+  items: OrderApiItem["items"] | undefined
+): OrderItem[] {
+  return Array.isArray(items)
+    ? items.map((item) => ({
+        itemId: item.itemId,
+        itemName: item.itemName,
+        mode: Array.isArray(item.mode)
+          ? Object.assign({}, ...item.mode)
+          : item.mode || {},
+        quantity: item.quantity,
+        price: item.price,
+      }))
+    : [];
+}
+
 function normalizeOrder(order: OrderApiItem): Order {
   return {
     mongoId: order._id || "",
-    items: Array.isArray(order.items) ? order.items : [],
+    items: normalizeOrderItems(order.items),
     estimatedTotal: toNumber(order.estimatedTotal),
     vendor: order.vendor || "",
     status: order.status || "",
@@ -87,6 +106,13 @@ export async function getOrders() {
 }
 
 export async function createOrder(order: OrderInput) {
+  console.log({
+    items: order.items,
+    estimatedTotal: order.estimatedTotal,
+    vendor: order.vendor,
+    status: order.status,
+    type: order.type,
+  });
   const response = await api.post<OrderApiResponse>("/orders", {
     items: order.items,
     estimatedTotal: order.estimatedTotal,
@@ -94,6 +120,7 @@ export async function createOrder(order: OrderInput) {
     status: order.status,
     type: order.type,
   });
+  console.log("Create order response:", response.data);
   return normalizeOrder(unwrapOrderResponse(response.data));
 }
 

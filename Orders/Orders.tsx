@@ -11,12 +11,20 @@ import {
   View,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import { getInventoryItems, InventoryItem } from "../services/inventoryApi";
+import {
+  getInventoryItems,
+  INVENTORY_MODE_KEYS,
+  InventoryItem,
+  InventoryMode,
+  InventoryModeKey,
+} from "../services/inventoryApi";
 import {
   createOrder,
   deleteOrder,
   getOrders,
   Order,
+  OrderItem,
+  updateOrder,
 } from "../services/ordersApi";
 import { useAppTheme } from "../theme/ThemeContext";
 
@@ -24,23 +32,87 @@ type OrderLine = {
   id: string;
   itemId: string;
   itemName: string;
-  mode: string;
+  mode: InventoryMode;
   quantity: number;
   price: number;
 };
 
-function formatMode(mode: InventoryItem["mode"]) {
-  return mode
-    .map((entry) => {
-      const [name, value] = Object.entries(entry)[0] || ["", ""];
-      return name ? `${name}: ${value}` : "";
-    })
+type ModeInputValues = Record<string, string>;
+
+function isInventoryModeKey(name: string): name is InventoryModeKey {
+  return INVENTORY_MODE_KEYS.includes(name as InventoryModeKey);
+}
+
+function getModeEntries(mode: InventoryItem["mode"] | InventoryMode) {
+  const modeMap = Array.isArray(mode) ? Object.assign({}, ...mode) : mode;
+
+  return Object.entries(modeMap).filter(
+    (entry): entry is [InventoryModeKey, number] =>
+      isInventoryModeKey(entry[0]) && typeof entry[1] === "number"
+  );
+}
+
+function formatMode(mode: InventoryItem["mode"] | InventoryMode) {
+  return getModeEntries(mode)
+    .map(([name, value]) => `${name}: ${value}`)
     .filter(Boolean);
+}
+
+function formatModeText(mode: InventoryItem["mode"] | InventoryMode) {
+  return formatMode(mode).join(", ");
 }
 
 function toNumber(value: string) {
   const amount = Number(value);
   return Number.isNaN(amount) ? 0 : amount;
+}
+
+function getOrderItemKey(itemId: string, mode: InventoryMode) {
+  return `${itemId}::${JSON.stringify(mode)}`;
+}
+
+function createEmptyModeInputValues(mode: InventoryItem["mode"]) {
+  return getModeEntries(mode).reduce<ModeInputValues>((values, [name]) => {
+    values[name] = "";
+    return values;
+  }, {});
+}
+
+function createModeInputValues(mode: InventoryItem["mode"] | InventoryMode) {
+  return getModeEntries(mode).reduce<ModeInputValues>((values, [name, value]) => {
+    values[name] = String(value);
+    return values;
+  }, {});
+}
+
+function toModeMap(modeValues: ModeInputValues) {
+  return Object.entries(modeValues).reduce<InventoryMode>((mode, [name, value]) => {
+    const amount = Number(value);
+
+    if (isInventoryModeKey(name) && !Number.isNaN(amount)) {
+      mode[name] = amount;
+    }
+
+    return mode;
+  }, {});
+}
+
+function groupOrderItems<T extends OrderItem>(items: T[]) {
+  return items.reduce<OrderItem[]>((groupedItems, item) => {
+    const existingItem = groupedItems.find(
+      (groupedItem) =>
+        getOrderItemKey(groupedItem.itemId, groupedItem.mode) ===
+        getOrderItemKey(item.itemId, item.mode)
+    );
+
+    if (existingItem) {
+      existingItem.quantity += item.quantity;
+      return groupedItems;
+    }
+
+    groupedItems.push({ ...item });
+    return groupedItems;
+  }, []);
 }
 
 export default function Orders() {
@@ -59,9 +131,12 @@ export default function Orders() {
   const [vendorName, setVendorName] = useState("");
   const [orderType, setOrderType] = useState<"Shop" | "Customer">("Shop");
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
-  const [selectedMode, setSelectedMode] = useState("");
+  const [selectedModeValues, setSelectedModeValues] =
+    useState<ModeInputValues>({});
   const [quantity, setQuantity] = useState("1");
   const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [statusUpdatingOrderId, setStatusUpdatingOrderId] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   const loadInventory = async () => {
@@ -95,7 +170,9 @@ export default function Orders() {
     loadOrders();
   }, []);
 
-  const selectedItemModes = selectedItem ? formatMode(selectedItem.mode) : [];
+  const selectedItemModeNames = selectedItem
+    ? getModeEntries(selectedItem.mode).map(([name]) => name)
+    : [];
   const selectedPrice = selectedItem ? toNumber(selectedItem.buyingPrice) : 0;
   const selectedQuantity = Math.max(1, Number(quantity) || 1);
   const previewTotal = selectedPrice * selectedQuantity;
@@ -116,9 +193,8 @@ export default function Orders() {
   );
 
   const handleSelectItem = (item: InventoryItem) => {
-    const modes = formatMode(item.mode);
     setSelectedItem(item);
-    setSelectedMode(modes[0] || "");
+    setSelectedModeValues(createEmptyModeInputValues(item.mode));
     setPickerVisible(false);
   };
 
@@ -132,25 +208,116 @@ export default function Orders() {
       return;
     }
 
-    setOrderLines((prev) => [
-      ...prev,
-      {
-        id: `${selectedItem.id}-${Date.now()}`,
-        itemId: selectedItem.id,
-        itemName: selectedItem.name,
-        mode: selectedMode,
-        quantity: selectedQuantity,
-        price: selectedPrice,
-      },
-    ]);
+    const selectedModeMap = toModeMap(selectedModeValues);
+    const missingModeValue = getModeEntries(selectedItem.mode).some(
+      ([name]) => !selectedModeValues[name]?.trim()
+    );
+
+    if (missingModeValue) {
+      Alert.alert("Missing mode value", "Please enter values for all modes.");
+      return;
+    }
+
+    const invalidModeValue = getModeEntries(selectedItem.mode).some(([name]) =>
+      Number.isNaN(Number(selectedModeValues[name]))
+    );
+
+    if (invalidModeValue) {
+      Alert.alert("Invalid mode value", "Mode values must be numbers.");
+      return;
+    }
+
+    setOrderLines((prev) => {
+      const existingLine = prev.find(
+        (line) =>
+          getOrderItemKey(line.itemId, line.mode) ===
+          getOrderItemKey(selectedItem.id, selectedModeMap)
+      );
+
+      if (existingLine) {
+        return prev.map((line) =>
+          line.id === existingLine.id
+            ? {
+                ...line,
+                quantity: line.quantity + selectedQuantity,
+                price: selectedPrice,
+              }
+            : line
+        );
+      }
+
+      return [
+        ...prev,
+        {
+          id: `${selectedItem.id}-${Date.now()}`,
+          itemId: selectedItem.id,
+          itemName: selectedItem.name,
+          mode: selectedModeMap,
+          quantity: selectedQuantity,
+          price: selectedPrice,
+        },
+      ];
+    });
 
     setSelectedItem(null);
-    setSelectedMode("");
+    setSelectedModeValues({});
     setQuantity("1");
   };
 
   const removeLine = (lineId: string) => {
     setOrderLines((prev) => prev.filter((line) => line.id !== lineId));
+  };
+
+  const editLine = (line: OrderLine) => {
+    const inventoryItem = inventory.find((item) => item.id === line.itemId);
+
+    if (!inventoryItem) {
+      Alert.alert(
+        "Item unavailable",
+        "This item is not available in inventory anymore."
+      );
+      return;
+    }
+
+    setSelectedItem(inventoryItem);
+    setSelectedModeValues(createModeInputValues(line.mode));
+    setQuantity(String(line.quantity));
+    removeLine(line.id);
+  };
+
+  const resetOrderForm = () => {
+    setOrderLines([]);
+    setVendorName("");
+    setOrderType("Shop");
+    setSelectedItem(null);
+    setSelectedModeValues({});
+    setQuantity("1");
+    setEditingOrder(null);
+  };
+
+  const startEditingOrder = (order: Order) => {
+    setEditingOrder(order);
+    setVendorName(order.vendor);
+    setOrderType(order.type === "Customer" ? "Customer" : "Shop");
+    setOrderLines(
+      groupOrderItems(order.items).map((item, index) => ({
+        id: `${item.itemId}-${index}-${Date.now()}`,
+        itemId: item.itemId,
+        itemName: item.itemName,
+        mode: item.mode,
+        quantity: item.quantity,
+        price: item.price,
+      }))
+    );
+    setSelectedItem(null);
+    setSelectedModeValues({});
+    setQuantity("1");
+    setActiveView("new");
+    setSuccessMessage("");
+  };
+
+  const cancelEditingOrder = () => {
+    resetOrderForm();
   };
 
   const completeOrder = async () => {
@@ -166,21 +333,32 @@ export default function Orders() {
 
     try {
       setSaving(true);
-      const createdOrder = await createOrder({
+      const orderPayload = {
         items: orderLines.map(({ id: _id, ...line }) => line),
         estimatedTotal: orderTotal,
         vendor: vendorName.trim(),
-        status: "Completed",
+        status: editingOrder?.status || "Pending",
         type: orderType,
-      });
+      };
 
-      setOrders((prev) => [createdOrder, ...prev]);
-      setOrderLines([]);
-      setVendorName("");
-      setOrderType("Shop");
-      setSuccessMessage("Order created.");
-    } catch {
-      Alert.alert("Save failed", "Could not create the order.");
+      if (editingOrder) {
+        const updatedOrder = await updateOrder(editingOrder.mongoId, orderPayload);
+        setOrders((prev) =>
+          prev.map((order) =>
+            order.mongoId === updatedOrder.mongoId ? updatedOrder : order
+          )
+        );
+        setSuccessMessage("Order updated.");
+      } else {
+        const createdOrder = await createOrder(orderPayload);
+        setOrders((prev) => [createdOrder, ...prev]);
+        setSuccessMessage("Order created.");
+      }
+
+      resetOrderForm();
+    } catch(e) {
+      console.error(e);
+      Alert.alert("Save failed", "Could not save the order.");
     } finally {
       setSaving(false);
     }
@@ -195,6 +373,30 @@ export default function Orders() {
       setSuccessMessage("Order deleted.");
     } catch {
       Alert.alert("Delete failed", "Could not delete the order.");
+    }
+  };
+
+  const isCompleteStatus = (status: string) =>
+    ["complete", "completed"].includes(status.toLowerCase());
+
+  const toggleOrderStatus = async (order: Order) => {
+    const nextStatus = isCompleteStatus(order.status) ? "Pending" : "Complete";
+
+    try {
+      setStatusUpdatingOrderId(order.mongoId);
+      const updatedOrder = await updateOrder(order.mongoId, {
+        status: nextStatus,
+      });
+      setOrders((prev) =>
+        prev.map((item) =>
+          item.mongoId === updatedOrder.mongoId ? updatedOrder : item
+        )
+      );
+      setSuccessMessage(`Order marked ${nextStatus}.`);
+    } catch {
+      Alert.alert("Update failed", "Could not update the order status.");
+    } finally {
+      setStatusUpdatingOrderId("");
     }
   };
 
@@ -290,16 +492,47 @@ export default function Orders() {
                   </View>
 
                   <View style={styles.historyRight}>
-                    <Text style={styles.statusText}>
-                      {order.status || "Pending"}
-                    </Text>
-                    <TouchableOpacity onPress={() => removeOrder(order)}>
-                      <Text style={styles.removeLine}>Delete</Text>
+                    <TouchableOpacity
+                      style={[
+                        styles.statusBtn,
+                        isCompleteStatus(order.status)
+                          ? styles.statusComplete
+                          : styles.statusPending,
+                        statusUpdatingOrderId === order.mongoId &&
+                          styles.disabledBtn,
+                      ]}
+                      onPress={() => toggleOrderStatus(order)}
+                      disabled={statusUpdatingOrderId === order.mongoId}
+                    >
+                      <Text
+                        style={[
+                          styles.statusText,
+                          {
+                            color: isCompleteStatus(order.status)
+                              ? "#fff"
+                              : "#000",
+                          },
+                        ]}
+                      >
+                        {statusUpdatingOrderId === order.mongoId
+                          ? "Updating..."
+                          : isCompleteStatus(order.status)
+                          ? "Complete"
+                          : "Pending"}
+                      </Text>
                     </TouchableOpacity>
+                    <View style={styles.historyActions}>
+                      <TouchableOpacity onPress={() => startEditingOrder(order)}>
+                        <Text style={styles.historyActionEdit}>Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => removeOrder(order)}>
+                        <Text style={styles.historyActionDelete}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
 
-                {order.items.map((item, index) => (
+                {groupOrderItems(order.items).map((item, index) => (
                   <View
                     key={`${order.mongoId}-${item.itemId}-${index}`}
                     style={[styles.historyLine, { borderTopColor: colors.border }]}
@@ -312,7 +545,9 @@ export default function Orders() {
                     </Text>
                     <Text style={[styles.lineMeta, { color: colors.textMuted }]}>
                       {item.quantity} x Rs {item.price}
-                      {item.mode ? ` - ${item.mode}` : ""}
+                      {formatModeText(item.mode)
+                        ? ` - ${formatModeText(item.mode)}`
+                        : ""}
                     </Text>
                   </View>
                 ))}
@@ -354,6 +589,22 @@ export default function Orders() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={[styles.panel, { backgroundColor: colors.surface }]}>
+            {editingOrder ? (
+              <View style={styles.editingBanner}>
+                <View>
+                  <Text style={[styles.selectorLabel, { color: colors.textMuted }]}>
+                    Editing order
+                  </Text>
+                  <Text style={[styles.lineName, { color: colors.text }]} numberOfLines={1}>
+                    {editingOrder.vendor || editingOrder.type || "Order"}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={cancelEditingOrder}>
+                  <Text style={styles.removeLine}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
             <TextInput
               placeholder="Vendor name"
               placeholderTextColor="#999"
@@ -414,41 +665,34 @@ export default function Orders() {
               <Icon name="chevron-down" size={14} color={colors.textMuted} />
             </TouchableOpacity>
 
-            {selectedItemModes.length > 0 ? (
-              <View style={styles.modeRow}>
-                {selectedItemModes.map((mode) => (
-                  <TouchableOpacity
-                    key={mode}
-                    style={[
-                      styles.modeChip,
-                      selectedMode === mode && styles.modeChipActive,
-                      {
-                        backgroundColor:
-                          selectedMode === mode
-                            ? colors.navActive
-                            : colors.surfaceMuted,
-                      },
-                    ]}
-                    onPress={() => setSelectedMode(mode)}
-                  >
-                    <Text
+            {selectedItemModeNames.length > 0 ? (
+              <View style={styles.modeInputGrid}>
+                {selectedItemModeNames.map((modeName) => (
+                  <View key={modeName} style={styles.modeInputWrap}>
+                    <Text style={[styles.selectorLabel, { color: colors.textMuted }]}>
+                      {modeName}
+                    </Text>
+                    <TextInput
+                      value={selectedModeValues[modeName] || ""}
+                      onChangeText={(text) =>
+                        setSelectedModeValues((prev) => ({
+                          ...prev,
+                          [modeName]: text,
+                        }))
+                      }
+                      keyboardType="numeric"
+                      placeholder="Value"
+                      placeholderTextColor="#999"
                       style={[
-                        styles.modeChipText,
-                        selectedMode === mode && styles.modeChipTextActive,
+                        styles.modeValueInput,
                         {
-                          color:
-                            selectedMode === mode &&
-                            colors.navActive === colors.accent
-                              ? "#000"
-                              : selectedMode === mode
-                              ? colors.accent
-                              : colors.text,
+                          backgroundColor: colors.input,
+                          borderColor: colors.border,
+                          color: colors.text,
                         },
                       ]}
-                    >
-                      {mode}
-                    </Text>
-                  </TouchableOpacity>
+                    />
+                  </View>
                 ))}
               </View>
             ) : null}
@@ -494,7 +738,9 @@ export default function Orders() {
           </View>
 
           <View style={[styles.summary, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Current Order</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {editingOrder ? "Edit Order" : "Current Order"}
+            </Text>
 
             {orderLines.length ? (
               orderLines.map((line) => (
@@ -508,7 +754,9 @@ export default function Orders() {
                     </Text>
                     <Text style={[styles.lineMeta, { color: colors.textMuted }]}>
                       {line.quantity} x Rs {line.price}
-                      {line.mode ? ` - ${line.mode}` : ""}
+                      {formatModeText(line.mode)
+                        ? ` - ${formatModeText(line.mode)}`
+                        : ""}
                     </Text>
                   </View>
 
@@ -516,6 +764,9 @@ export default function Orders() {
                     <Text style={[styles.lineTotal, { color: colors.text }]}>
                       Rs {line.price * line.quantity}
                     </Text>
+                    <TouchableOpacity onPress={() => editLine(line)}>
+                      <Text style={styles.editLine}>Edit</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity onPress={() => removeLine(line.id)}>
                       <Text style={styles.removeLine}>Remove</Text>
                     </TouchableOpacity>
@@ -540,7 +791,11 @@ export default function Orders() {
               disabled={!orderLines.length || saving}
             >
               <Text style={styles.completeText}>
-                {saving ? "Saving..." : "Complete Order"}
+                {saving
+                  ? "Saving..."
+                  : editingOrder
+                  ? "Update Order"
+                  : "Complete Order"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -675,9 +930,29 @@ const styles = StyleSheet.create({
   },
   historyRight: {
     alignItems: "flex-end",
+    minWidth: 112,
+  },
+  historyActions: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "flex-end",
+    marginTop: 8,
+  },
+  statusBtn: {
+    alignItems: "center",
+    borderRadius: 8,
+    minWidth: 90,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  statusComplete: {
+    backgroundColor: "#27ae60",
+  },
+  statusPending: {
+    backgroundColor: "#fcc01e",
   },
   statusText: {
-    color: "#27ae60",
     fontFamily: "JetBrains",
     fontSize: 12,
     fontWeight: "400",
@@ -692,6 +967,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 14,
+  },
+  editingBanner: {
+    alignItems: "center",
+    borderBottomColor: "#f0f0f0",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    paddingBottom: 12,
   },
   input: {
     fontFamily: "JetBrains",
@@ -734,6 +1018,22 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
     marginTop: 12,
+  },
+  modeInputGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 12,
+  },
+  modeInputWrap: {
+    minWidth: "30%",
+  },
+  modeValueInput: {
+    borderRadius: 8,
+    borderWidth: 1,
+    fontFamily: "JetBrains",
+    height: 40,
+    paddingHorizontal: 10,
   },
   modeChip: {
     backgroundColor: "#f4f4f4",
@@ -821,6 +1121,9 @@ const styles = StyleSheet.create({
   lineMeta: { color: "#777", fontFamily: "JetBrains", fontSize: 12, marginTop: 4 },
   lineRight: { alignItems: "flex-end" },
   lineTotal: { color: "#000", fontFamily: "JetBrains", fontWeight: "400" },
+  editLine: { color: "#8a6200", fontFamily: "JetBrains", fontSize: 12 },
+  historyActionEdit: { color: "#8a6200", fontFamily: "JetBrains", fontSize: 12 },
+  historyActionDelete: { color: "#c0392b", fontFamily: "JetBrains", fontSize: 12 },
   removeLine: { color: "#c0392b", fontFamily: "JetBrains", fontSize: 12, marginTop: 6 },
   emptyText: { color: "#777", fontFamily: "JetBrains", textAlign: "center", paddingVertical: 12 },
   totalRow: {
