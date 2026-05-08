@@ -12,6 +12,12 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { getInventoryItems, InventoryItem } from "../services/inventoryApi";
+import {
+  createOrder,
+  deleteOrder,
+  getOrders,
+  Order,
+} from "../services/ordersApi";
 import { useAppTheme } from "../theme/ThemeContext";
 
 type OrderLine = {
@@ -40,13 +46,18 @@ function toNumber(value: string) {
 export default function Orders() {
   const { colors } = useAppTheme();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [historyError, setHistoryError] = useState("");
   const [activeView, setActiveView] = useState<"new" | "history">("new");
   const [pickerVisible, setPickerVisible] = useState(false);
   const [search, setSearch] = useState("");
 
   const [vendorName, setVendorName] = useState("");
+  const [orderType, setOrderType] = useState<"Shop" | "Customer">("Shop");
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [selectedMode, setSelectedMode] = useState("");
   const [quantity, setQuantity] = useState("1");
@@ -59,15 +70,29 @@ export default function Orders() {
       setError("");
       const items = await getInventoryItems();
       setInventory(items);
-    } catch (loadError) {
+    } catch {
       setError("Could not load inventory for orders.");
     } finally {
       setLoading(false);
     }
   };
 
+  const loadOrders = async () => {
+    try {
+      setHistoryLoading(true);
+      setHistoryError("");
+      const items = await getOrders();
+      setOrders(items);
+    } catch {
+      setHistoryError("Could not load orders from the server.");
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadInventory();
+    loadOrders();
   }, []);
 
   const selectedItemModes = selectedItem ? formatMode(selectedItem.mode) : [];
@@ -128,15 +153,52 @@ export default function Orders() {
     setOrderLines((prev) => prev.filter((line) => line.id !== lineId));
   };
 
-  const completeOrder = () => {
+  const completeOrder = async () => {
     if (!orderLines.length) {
       Alert.alert("Empty order", "Add at least one item before completing.");
       return;
     }
 
-    setOrderLines([]);
-    setVendorName("");
-    setSuccessMessage("Order created.");
+    try {
+      setSaving(true);
+      const createdOrder = await createOrder({
+        items: orderLines.map(({ id: _id, ...line }) => line),
+        estimatedTotal: orderTotal,
+        status: "Completed",
+        type: orderType,
+      });
+
+      setOrders((prev) => [createdOrder, ...prev]);
+      setOrderLines([]);
+      setVendorName("");
+      setOrderType("Shop");
+      setSuccessMessage("Order created.");
+    } catch {
+      Alert.alert("Save failed", "Could not create the order.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removeOrder = async (order: Order) => {
+    try {
+      await deleteOrder(order.mongoId);
+      setOrders((prev) =>
+        prev.filter((item) => item.mongoId !== order.mongoId)
+      );
+      setSuccessMessage("Order deleted.");
+    } catch {
+      Alert.alert("Delete failed", "Could not delete the order.");
+    }
+  };
+
+  const formatDate = (value: string) => {
+    if (!value) {
+      return "No date";
+    }
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
   };
 
   return (
@@ -193,7 +255,84 @@ export default function Orders() {
         </TouchableOpacity>
       </View>
 
-      {loading ? (
+      {activeView === "history" ? (
+        <ScrollView contentContainerStyle={styles.content}>
+          {historyLoading ? (
+            <ActivityIndicator color="#fcc01e" style={{ marginTop: 24 }} />
+          ) : historyError ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.errorText}>{historyError}</Text>
+              <TouchableOpacity style={styles.retryBtn} onPress={loadOrders}>
+                <Text style={styles.retryText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : orders.length ? (
+            orders.map((order) => (
+              <View
+                key={order.mongoId}
+                style={[styles.historyCard, { backgroundColor: colors.surface }]}
+              >
+                <View style={styles.historyCardHeader}>
+                  <View>
+                    <Text style={[styles.historyTitle, { color: colors.text }]}>
+                      {order.type || "Order"}
+                    </Text>
+                    <Text style={[styles.historyText, { color: colors.textMuted }]}>
+                      {formatDate(order.createdAt)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.historyRight}>
+                    <Text style={styles.statusText}>
+                      {order.status || "Pending"}
+                    </Text>
+                    <TouchableOpacity onPress={() => removeOrder(order)}>
+                      <Text style={styles.removeLine}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {order.items.map((item, index) => (
+                  <View
+                    key={`${order.mongoId}-${item.itemId}-${index}`}
+                    style={[styles.historyLine, { borderTopColor: colors.border }]}
+                  >
+                    <Text
+                      style={[styles.lineName, { color: colors.text }]}
+                      numberOfLines={1}
+                    >
+                      {item.itemName}
+                    </Text>
+                    <Text style={[styles.lineMeta, { color: colors.textMuted }]}>
+                      {item.quantity} x Rs {item.price}
+                      {item.mode ? ` - ${item.mode}` : ""}
+                    </Text>
+                  </View>
+                ))}
+
+                <View style={styles.totalRow}>
+                  <Text style={[styles.totalLabel, { color: colors.text }]}>
+                    Total
+                  </Text>
+                  <Text style={styles.totalValue}>
+                    Rs {order.estimatedTotal}
+                  </Text>
+                </View>
+              </View>
+            ))
+          ) : (
+            <View style={[styles.historyPanel, { backgroundColor: colors.surface }]}>
+              <Icon name="history" size={26} color={colors.accent} />
+              <Text style={[styles.historyTitle, { color: colors.text }]}>
+                No past orders yet
+              </Text>
+              <Text style={[styles.historyText, { color: colors.textMuted }]}>
+                Completed orders will appear here once they are created.
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      ) : loading ? (
         <ActivityIndicator color="#fcc01e" style={{ marginTop: 24 }} />
       ) : error ? (
         <View style={styles.emptyState}>
@@ -201,16 +340,6 @@ export default function Orders() {
           <TouchableOpacity style={styles.retryBtn} onPress={loadInventory}>
             <Text style={styles.retryText}>Retry</Text>
           </TouchableOpacity>
-        </View>
-      ) : activeView === "history" ? (
-        <View style={[styles.historyPanel, { backgroundColor: colors.surface }]}>
-          <Icon name="history" size={26} color={colors.accent} />
-          <Text style={[styles.historyTitle, { color: colors.text }]}>
-            No past orders yet
-          </Text>
-          <Text style={[styles.historyText, { color: colors.textMuted }]}>
-            Completed orders will appear here once order history is connected.
-          </Text>
         </View>
       ) : (
         <ScrollView
@@ -232,6 +361,38 @@ export default function Orders() {
                 },
               ]}
             />
+
+            <View style={styles.typeRow}>
+              {(["Shop", "Customer"] as const).map((type) => (
+                <TouchableOpacity
+                  key={type}
+                  style={[
+                    styles.typeBtn,
+                    {
+                      backgroundColor:
+                        orderType === type ? colors.navActive : colors.surfaceMuted,
+                    },
+                  ]}
+                  onPress={() => setOrderType(type)}
+                >
+                  <Text
+                    style={[
+                      styles.typeText,
+                      {
+                        color:
+                          orderType === type && colors.navActive === colors.accent
+                            ? "#000"
+                            : orderType === type
+                            ? colors.accent
+                            : colors.text,
+                      },
+                    ]}
+                  >
+                    {type}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
             <TouchableOpacity
               style={[styles.itemSelector, { borderColor: colors.border }]}
@@ -366,12 +527,14 @@ export default function Orders() {
             <TouchableOpacity
               style={[
                 styles.completeBtn,
-                !orderLines.length && styles.disabledBtn,
+                (!orderLines.length || saving) && styles.disabledBtn,
               ]}
               onPress={completeOrder}
-              disabled={!orderLines.length}
+              disabled={!orderLines.length || saving}
             >
-              <Text style={styles.completeText}>Complete Order</Text>
+              <Text style={styles.completeText}>
+                {saving ? "Saving..." : "Complete Order"}
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -491,6 +654,33 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: "center",
   },
+  historyCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginBottom: 12,
+    padding: 14,
+  },
+  historyCardHeader: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  historyRight: {
+    alignItems: "flex-end",
+  },
+  statusText: {
+    color: "#27ae60",
+    fontFamily: "JetBrains",
+    fontSize: 12,
+    fontWeight: "400",
+  },
+  historyLine: {
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+    marginTop: 10,
+    paddingTop: 10,
+  },
   panel: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -513,6 +703,22 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     padding: 12,
+  },
+  typeRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 10,
+  },
+  typeBtn: {
+    alignItems: "center",
+    borderRadius: 8,
+    flex: 1,
+    paddingVertical: 10,
+  },
+  typeText: {
+    fontFamily: "JetBrains",
+    fontSize: 13,
+    fontWeight: "400",
   },
   selectorLabel: { color: "#999", fontFamily: "JetBrains", fontSize: 11, marginBottom: 3 },
   selectorValue: { color: "#000", fontFamily: "JetBrains", fontWeight: "400", maxWidth: 240 },
