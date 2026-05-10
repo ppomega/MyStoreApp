@@ -4,12 +4,11 @@ export type Borrower = {
   id: string;
   name: string;
   phone: string;
-  amount: number;
-  paidAmount: number;
-  reason: string;
-  status: string;
-  dueDate: string;
-  notes: string;
+  debt:number,
+  lastCredit:Date|undefined,
+  lastDebit:Date|undefined,
+  lastCreditedValue:number,
+  lastDebitedValue:number,
   createdAt: string;
   updatedAt: string;
 };
@@ -18,21 +17,16 @@ export type BorrowerInput = Omit<Borrower, 'id' | 'createdAt' | 'updatedAt'>;
 
 type BorrowerApiItem = {
   _id?: string;
-  id?: string;
   name?: string;
-  borrowerName?: string;
+  debt?: number;
+  lastCredit?: Date;
+  lastDebit?: Date;
+  lastCreditedValue?: number;
+  lastDebitedValue?: number;
   phone?: string | number;
-  mobile?: string | number;
-  amount?: string | number;
-  borrowedAmount?: string | number;
-  paidAmount?: string | number;
-  paid?: string | number;
-  reason?: string;
-  status?: string;
-  dueDate?: string;
-  notes?: string;
   createdAt?: string;
   updatedAt?: string;
+
 };
 
 type BorrowerApiResponse =
@@ -53,18 +47,14 @@ function toNumber(value: string | number | undefined) {
 
 function normalizeBorrower(borrower: BorrowerApiItem): Borrower {
   return {
-    id: borrower.id || borrower._id || '',
-    name: borrower.name || borrower.borrowerName || '',
-    phone:
-      borrower.phone === undefined
-        ? String(borrower.mobile || '')
-        : String(borrower.phone),
-    amount: toNumber(borrower.amount || borrower.borrowedAmount),
-    paidAmount: toNumber(borrower.paidAmount || borrower.paid),
-    reason: borrower.reason || '',
-    status: borrower.status || 'Pending',
-    dueDate: borrower.dueDate || '',
-    notes: borrower.notes || '',
+    id: borrower._id || '',
+    name: borrower.name ||  '',
+    phone:String(borrower.phone),
+    debt: toNumber(borrower.debt),
+    lastCreditedValue: toNumber(borrower.lastCreditedValue),
+    lastDebitedValue: toNumber(borrower.lastDebitedValue),
+    lastCredit: borrower.lastCredit ? new Date(borrower.lastCredit) : undefined,
+    lastDebit: borrower.lastDebit ? new Date(borrower.lastDebit) : undefined,
     createdAt: borrower.createdAt || '',
     updatedAt: borrower.updatedAt || '',
   };
@@ -84,12 +74,11 @@ function serializeBorrowerForApi(borrower: BorrowerInput) {
   return {
     name: borrower.name,
     phone: borrower.phone,
-    amount: borrower.amount,
-    paidAmount: borrower.paidAmount,
-    reason: borrower.reason,
-    status: borrower.status,
-    dueDate: borrower.dueDate,
-    notes: borrower.notes,
+    debt: borrower.debt,
+    lastCreditedValue: borrower.lastCreditedValue,
+    lastDebitedValue: borrower.lastDebitedValue,
+    lastCredit: borrower.lastCredit,
+    lastDebit: borrower.lastDebit,
   };
 }
 
