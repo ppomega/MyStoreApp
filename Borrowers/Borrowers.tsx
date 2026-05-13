@@ -30,6 +30,7 @@ import {
   getBorrowerDebts,
   updateBorrowerDebt,
 } from '../services/borrowerDebtApi';
+import { BorrowerPayment,BorrowerPaymentInput,createBorrowerPayment,deleteBorrowerPayment,getBorrowerPayments,updateBorrowerPayment } from '../services/borrowerPaymentApi';
 import { useAppTheme } from '../theme/ThemeContext';
 
 // ─── Borrower form types ──────────────────────────────────────────────────────
@@ -89,11 +90,12 @@ export default function BorrowersScreen() {
   const { colors } = useAppTheme();
 
   // ── Top-level tab ───────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<'borrowers' | 'debts'>('borrowers');
+  const [activeTab, setActiveTab] = useState<'borrowers' | 'debts'| 'payments'>('borrowers');
 
   // ── Shared data ─────────────────────────────────────────────────────────────
   const [borrowers, setBorrowers] = useState<Borrower[]>([]);
   const [debts, setDebts] = useState<BorrowerDebt[]>([]);
+  const [payments, setPayments] = useState<BorrowerPayment[]>([]);
 
   // ── Borrowers tab state ─────────────────────────────────────────────────────
   const [borrowerSearch, setBorrowerSearch] = useState('');
@@ -105,17 +107,26 @@ export default function BorrowersScreen() {
   const [pendingDeleteBorrower, setPendingDeleteBorrower] = useState<Borrower | null>(null);
   const [borrowerForm, setBorrowerForm] = useState<BorrowerForm>(emptyBorrowerForm);
 
-  // ── Debts tab state ─────────────────────────────────────────────────────────
+  // ── Debts and Payments tab state ─────────────────────────────────────────────────────────
   const [debtsLoading, setDebtsLoading] = useState(false);
   const [debtsError, setDebtsError] = useState('');
   const [debtSaving, setDebtSaving] = useState(false);
   const [debtPickerVisible, setDebtPickerVisible] = useState(false);
   const [debtPickerSearch, setDebtPickerSearch] = useState('');
-  const [selectedBorrower, setSelectedBorrower] = useState<Borrower | null>(null);
   const [debtValue, setDebtValue] = useState('');
   const [debtTaken, setDebtTaken] = useState('');
   const [editingDebt, setEditingDebt] = useState<BorrowerDebt | null>(null);
   const [debtActiveView, setDebtActiveView] = useState<'new' | 'history'>('new');
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [paymentsError, setPaymentsError] = useState('');
+  const [paymentSaving, setPaymentSaving] = useState(false);
+  const [paymentPickerVisible, setPaymentPickerVisible] = useState(false);
+  const [paymentPickerSearch, setPaymentPickerSearch] = useState('');
+  const [paymentValue, setPaymentValue] = useState('');
+  const [paymentTaken, setPaymentTaken] = useState('');
+  const [editingPayment, setEditingPayment] = useState<BorrowerPayment | null>(null);
+  const [paymentActiveView, setPaymentActiveView] = useState<'new' | 'history'>('new');
+  const [selectedBorrower, setSelectedBorrower] = useState<Borrower | null>(null);
 
   // ── Shared toast ────────────────────────────────────────────────────────────
   const [successMessage, setSuccessMessage] = useState('');
@@ -145,10 +156,21 @@ export default function BorrowersScreen() {
       setDebtsLoading(false);
     }
   };
-
+  const loadPayments = async () => {
+    try {
+      setPaymentsLoading(true);
+      setPaymentsError('');
+      setPayments(await getBorrowerPayments());
+    } catch {
+      setPaymentsError('Could not load payments from the server.');
+    } finally {
+      setPaymentsLoading(false);
+    }
+  };
   useEffect(() => {
     loadBorrowers();
     loadDebts();
+    loadPayments();
   }, []);
 
   // ── Borrower CRUD ────────────────────────────────────────────────────────────
@@ -207,18 +229,18 @@ export default function BorrowersScreen() {
 
   // ── Debt CRUD ─────────────────────────────────────────────────────────────
 
-  const resetDebtForm = () => {
+  const resetPaymentForm = () => {
     setSelectedBorrower(null);
     setDebtValue('');
     setDebtTaken('');
     setEditingDebt(null);
   };
 
-  const startEditingDebt = (debt: BorrowerDebt) => {
-    setEditingDebt(debt);
-    setSelectedBorrower(borrowers.find(b => b.id === debt.borrower) ?? null);
-    setDebtValue(String(debt.value));
-    setDebtTaken(debt.debtTaken ? new Date(debt.debtTaken).toISOString().slice(0, 10) : '');
+  const startEditingPayment = (payment: BorrowerPayment) => {
+    setEditingPayment(payment);
+    setSelectedBorrower(borrowers.find(b => b.id === payment.borrower) ?? null);
+    setDebtValue(String(payment.value));
+    setDebtTaken(payment.paymentTaken ? new Date(payment.paymentTaken).toISOString().slice(0, 10) : '');
     setDebtActiveView('new');
     setSuccessMessage('');
   };
@@ -285,6 +307,85 @@ export default function BorrowersScreen() {
     );
   };
 
+  // Payment CRUD
+    const resetDebtForm = () => {
+    setSelectedBorrower(null);
+    setDebtValue('');
+    setDebtTaken('');
+    setEditingDebt(null);
+  };
+
+  const startEditingDebt = (debt: BorrowerDebt) => {
+    setEditingDebt(debt);
+    setSelectedBorrower(borrowers.find(b => b.id === debt.borrower) ?? null);
+    setDebtValue(String(debt.value));
+    setDebtTaken(debt.debtTaken ? new Date(debt.debtTaken).toISOString().slice(0, 10) : '');
+    setDebtActiveView('new');
+    setSuccessMessage('');
+  };
+
+  const handleSavePayment = async () => {
+    if (!selectedBorrower) {
+      Alert.alert('Missing borrower', 'Please select a borrower.');
+      return;
+    }
+    const numericValue = Number(paymentValue);
+    if (!paymentValue || Number.isNaN(numericValue) || numericValue <= 0) {
+      Alert.alert('Invalid amount', 'Please enter a valid payment amount.');
+      return;
+    }
+    const payload: BorrowerPaymentInput = {
+      borrower: selectedBorrower.id,
+      value: numericValue,
+      paymentTaken: paymentTaken ? new Date(paymentTaken) : new Date(),
+    };
+    try {
+      setPaymentSaving(true);
+      if (editingPayment) {
+        const updated = await updateBorrowerPayment(editingPayment.id, payload);
+        setPayments(prev => prev.map(d => (d.id === updated.id ? updated : d)));
+        setSuccessMessage('Payment updated.');
+      } else {
+        const created = await createBorrowerPayment(payload);
+        setPayments(prev => [created, ...prev]);
+        setSuccessMessage('Payment recorded.');
+      }
+      resetPaymentForm();
+      // Refresh borrowers so the server-recomputed debt total
+      // is reflected on Borrower cards immediately.
+      loadBorrowers();
+    } catch {
+      Alert.alert('Save failed', 'Could not save the payment entry.');
+    } finally {
+      setPaymentSaving(false);
+    }
+  };
+
+  const handleDeletePayment = (payment: BorrowerPayment) => {
+    Alert.alert(
+      'Delete payment?',
+      `Remove Rs ${payment.value} from ${getBorrowerName(borrowers, payment.borrower)}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteBorrowerPayment(payment.id);
+              setPayments(prev => prev.filter(p => p.id !== payment.id));
+              setSuccessMessage('Payment deleted.');
+              // Refresh borrowers so the recomputed total is reflected.
+              loadBorrowers();
+            } catch {
+              Alert.alert('Delete failed', 'Could not delete the payment.');
+            }
+          },
+        },
+      ],
+    );
+  };
+
   // ── Filtered lists ────────────────────────────────────────────────────────
 
   const filteredBorrowers = borrowers.filter(b =>
@@ -341,7 +442,7 @@ export default function BorrowersScreen() {
 
       {/* ── Top-level tab switch ─────────────────────────────────────────── */}
       <View style={[styles.viewSwitch, { backgroundColor: colors.surface }]}>
-        {(['borrowers', 'debts'] as const).map(tab => (
+        {(['borrowers', 'debts', 'payments'] as const).map(tab => (
           <TouchableOpacity
             key={tab}
             style={[
@@ -361,7 +462,7 @@ export default function BorrowersScreen() {
                 },
               ]}
             >
-              {tab === 'borrowers' ? 'Borrowers' : 'Debts'}
+              {tab === 'borrowers' ? 'Borrowers' : tab === 'debts' ? 'Debts' : 'Payments'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -411,7 +512,7 @@ export default function BorrowersScreen() {
           )}
         </>
 
-      ) : (
+      ) : activeTab === 'debts' ? (
       /* ════════════════════════════════════════════════════════════════════
           DEBTS TAB
       ════════════════════════════════════════════════════════════════════ */
@@ -560,18 +661,7 @@ export default function BorrowersScreen() {
                     { backgroundColor: colors.input, borderColor: colors.border, color: colors.text },
                   ]}
                 />
-
-                {/* Date */}
-                <TextInput
-                  placeholder="Date taken (YYYY-MM-DD) — leave blank for today"
-                  placeholderTextColor="#999"
-                  value={debtTaken}
-                  onChangeText={setDebtTaken}
-                  style={[
-                    styles.input,
-                    { backgroundColor: colors.input, borderColor: colors.border, color: colors.text },
-                  ]}
-                />
+{/*  */}
 
                 {/* Save */}
                 <TouchableOpacity
@@ -587,7 +677,172 @@ export default function BorrowersScreen() {
             </ScrollView>
           )}
         </>
-      )}
+      ):(  
+       /* ════════════════════════════════════════════════════════════════════
+          PAYMENTS TAB
+      ════════════════════════════════════════════════════════════════════ */
+      <>
+          {/* Payment sub-tab: New / History */}
+          <View style={[styles.subSwitch, { backgroundColor: colors.surface }]}>
+            {(['new', 'history'] as const).map(sub => (
+              <TouchableOpacity
+                key={sub}
+                style={[
+                  styles.subSwitchBtn,
+                  paymentActiveView === sub && { backgroundColor: colors.navActive },
+                ]}
+                onPress={() => setPaymentActiveView(sub)}
+              >
+                <Text
+                  style={[
+                    styles.subSwitchText,
+                    {
+                      color:
+                        paymentActiveView === sub
+                          ? colors.navActive === colors.accent ? '#000' : '#fff'
+                          : colors.text,
+                    },
+                  ]}
+                >
+                  {sub === 'new' ? (editingPayment ? 'Edit Payment' : 'New Payment') : 'History'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* ── Payment History ─────────────────────────────────────────────── */}
+          {paymentActiveView === 'history' ? (
+            <ScrollView contentContainerStyle={styles.listContent}>
+              {paymentsLoading ? (
+                <ActivityIndicator color="#fcc01e" style={{ marginTop: 24 }} />
+              ) : paymentsError ? (
+                <View style={styles.emptyState}>
+                  <Text style={styles.errorText}>{paymentsError}</Text>
+                  <TouchableOpacity style={styles.retryBtn} onPress={loadPayments}>
+                    <Text style={styles.retryText}>Retry</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : payments.length ? (
+                payments.map(payment => (
+                  <View
+                    key={payment.id}
+                    style={[styles.card, { backgroundColor: colors.surface }]}
+                  >
+                    <View style={styles.debtCardHeader}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.name, { color: colors.text }]}>
+                          {getBorrowerName(borrowers, payment.borrower)}
+                        </Text>
+                        <Text style={[styles.meta, { color: colors.textMuted }]}>
+                          Taken: {formatDate(payment.paymentTaken)}
+                        </Text>
+                        <Text style={[styles.meta, { color: colors.textMuted }]}>
+                          Recorded: {formatDate(payment.createdAt)}
+                        </Text>
+                      </View>
+                      <Text style={styles.amount}>Rs {payment.value}</Text>
+                    </View>
+
+                    <View style={[styles.cardActions, { borderTopColor: colors.border }]}>
+                      <TouchableOpacity
+                        style={[styles.actionBtn, styles.editBtn]}
+                        onPress={() => {
+                          startEditingPayment(payment);
+                          setActiveTab('payments');
+                        }}
+                      >
+                        <Text style={styles.actionText}>Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionBtn, styles.deleteBtn]}
+                        onPress={() => handleDeletePayment(payment)}
+                      >
+                        <Text style={styles.actionText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))
+              ) : (
+                <View style={[styles.emptyPanel, { backgroundColor: colors.surface }]}>
+                  <Icon name="list-alt" size={26} color={colors.accent} />
+                  <Text style={[styles.name, { color: colors.text, marginTop: 12 }]}>
+                    No debts recorded yet
+                  </Text>
+                  <Text style={[styles.meta, { color: colors.textMuted, textAlign: 'center', marginTop: 6 }]}>
+                    Recorded debts will appear here once they are created.
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+
+          ) : (
+          /* ── New / Edit Payment form ───────────────────────────────────── */
+            <ScrollView
+              contentContainerStyle={styles.listContent}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={[styles.panel, { backgroundColor: colors.surface }]}>
+
+                {/* Editing banner */}
+                {editingPayment ? (
+                  <View style={styles.editingBanner}>
+                    <View>
+                      <Text style={[styles.label, { color: colors.textMuted }]}>
+                        Editing payment
+                      </Text>
+                      <Text style={[styles.name, { color: colors.text }]}>
+                        {getBorrowerName(borrowers, editingPayment.borrower)} — Rs {editingPayment.value}
+                      </Text>
+                    </View>
+                    <TouchableOpacity onPress={resetPaymentForm}>
+                      <Text style={styles.cancelText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
+
+                {/* Borrower picker */}
+                <TouchableOpacity
+                  style={[styles.itemSelector, { borderColor: colors.border }]}
+                  onPress={() => setDebtPickerVisible(true)}
+                >
+                  <View>
+                    <Text style={[styles.label, { color: colors.textMuted }]}>Borrower</Text>
+                    <Text style={[styles.selectorValue, { color: colors.text }]} numberOfLines={1}>
+                      {selectedBorrower ? selectedBorrower.name : 'Select borrower'}
+                    </Text>
+                  </View>
+                  <Icon name="chevron-down" size={14} color={colors.textMuted} />
+                </TouchableOpacity>
+
+                {/* Amount */}
+                <TextInput
+                  placeholder="Payment amount (Rs)"
+                  placeholderTextColor="#999"
+                  value={paymentValue}
+                  onChangeText={setPaymentValue}
+                  keyboardType="numeric"
+                  style={[
+                    styles.input,
+                    { backgroundColor: colors.input, borderColor: colors.border, color: colors.text },
+                  ]}
+                />
+
+                {/* Date */}
+
+                {/* Save */}
+                <TouchableOpacity
+                  style={[styles.saveBtn, paymentSaving && styles.disabledBtn]}
+                  onPress={handleSavePayment}
+                  disabled={paymentSaving}
+                >
+                  <Text style={styles.saveBtnText}>
+                    {paymentSaving ? 'Saving...' : editingPayment ? 'Update Payment' : 'Record Payment'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          )}
+        </>)}
 
       {/* ── Toast ─────────────────────────────────────────────────────────── */}
       {successMessage ? (
