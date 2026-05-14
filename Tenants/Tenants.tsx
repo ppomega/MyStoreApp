@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import DatePicker from 'react-native-date-picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {
   createTenant,
@@ -92,8 +93,16 @@ function formatDate(value: string | Date | undefined) {
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
 }
 
-function getTenantName(tenants: Tenant[], tenantId: string) {
-  return tenants.find(tenant => tenant.id === tenantId)?.name ?? 'Unknown';
+function getTenantName(tenant: any) {
+  if (!tenant) {
+    return 'Unknown';
+  }
+
+  if (typeof tenant === 'string') {
+    return tenant;
+  }
+
+  return tenant.name || 'Unknown';
 }
 
 export default function Tenants() {
@@ -128,6 +137,8 @@ export default function Tenants() {
   const [rentRoomRent, setRentRoomRent] = useState('');
   const [rentUnits, setRentUnits] = useState('');
   const [rentStatus, setRentStatus] = useState<'Paid' | 'Pending'>('Pending');
+const [showDatePicker, setShowDatePicker] = useState(false);
+const [selectedDate, setSelectedDate] = useState(new Date());
   const [form, setForm] = useState<TenantForm>(emptyForm);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -147,13 +158,15 @@ export default function Tenants() {
     try {
       setRecordsLoading(true);
       setRecordsError('');
-      const [rentItems, paymentItems] = await Promise.all([
+      const [rentItems] = await Promise.all([
         getTenantRents(),
-        getTenantPayments(),
+        // getTenantPayments(),
       ]);
+      console.log('Loaded rents:', rentItems);
       setRents(rentItems);
-      setPayments(paymentItems);
-    } catch {
+      // setPayments(paymentItems);
+    } catch(e) {
+      console.error('Error loading records:', e);
       setRecordsError('Could not load rent and payment records.');
     } finally {
       setRecordsLoading(false);
@@ -323,7 +336,7 @@ export default function Tenants() {
     setRecordView('new');
     setEditingRent(rent);
     setEditingPayment(null);
-    setSelectedTenant(tenants.find(tenant => tenant.id === rent.tenant) ?? null);
+    setSelectedTenant(getTenantName(rent.tenant));
     setRentMonth(rent.month ? rent.month.toISOString().slice(0, 10) : '');
     setRentRoomRent(String(rent.roomRent));
     setRentUnits(String(rent.units));
@@ -475,20 +488,41 @@ export default function Tenants() {
 
         {activeTab === 'rents' ? (
           <>
-            <TextInput
-              placeholder="Month (YYYY-MM-DD)"
-              placeholderTextColor="#999"
-              value={rentMonth}
-              onChangeText={setRentMonth}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.input,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-            />
+          <TouchableOpacity
+  style={[
+    styles.input,
+    {
+      backgroundColor: colors.input,
+      borderColor: colors.border,
+      justifyContent: 'center',
+    },
+  ]}
+  onPress={() => setShowDatePicker(true)}
+>
+  <Text
+    style={{
+      color: rentMonth ? colors.text : '#999',
+      fontFamily: 'JetBrains',
+    }}
+  >
+    {rentMonth || 'Select month'}
+  </Text>
+</TouchableOpacity>
+
+<DatePicker
+  modal
+  mode="date"
+  open={showDatePicker}
+  date={selectedDate}
+  onConfirm={date => {
+    setShowDatePicker(false);
+    setSelectedDate(date);
+    setRentMonth(date.toISOString().slice(0, 10));
+  }}
+  onCancel={() => {
+    setShowDatePicker(false);
+  }}
+/>
             <View style={styles.formRow}>
               <TextInput
                 placeholder="Room rent"
@@ -604,7 +638,7 @@ export default function Tenants() {
             <View style={styles.cardHeader}>
               <View style={styles.cardTitleWrap}>
                 <Text style={[styles.name, { color: colors.text }]}>
-                  {getTenantName(tenants, record.tenant)}
+                  {getTenantName(record.tenant)}
                 </Text>
                 <Text style={[styles.meta, { color: colors.textMuted }]}>
                   {formatDate(
@@ -700,6 +734,7 @@ export default function Tenants() {
     );
   };
 
+  // ── FIXED: New form always renders; error/loading only blocks History ──
   const renderRecordTab = () => (
     <>
       <View style={[styles.subSwitch, { backgroundColor: colors.surface }]}>
@@ -728,7 +763,10 @@ export default function Tenants() {
           </TouchableOpacity>
         ))}
       </View>
-      {recordsLoading ? (
+
+      {recordView === 'new' ? (
+        renderRecordForm()
+      ) : recordsLoading ? (
         <ActivityIndicator color="#fcc01e" style={{ marginTop: 24 }} />
       ) : recordsError ? (
         <View style={styles.emptyState}>
@@ -737,8 +775,6 @@ export default function Tenants() {
             <Text style={styles.retryText}>Retry</Text>
           </TouchableOpacity>
         </View>
-      ) : recordView === 'new' ? (
-        renderRecordForm()
       ) : (
         renderRecordHistory()
       )}
@@ -979,6 +1015,9 @@ export default function Tenants() {
                   style={[styles.pickerItem, { borderBottomColor: colors.border }]}
                   onPress={() => {
                     setSelectedTenant(tenant);
+                    if (activeTab === 'rents' && !editingRent) {
+                      setRentRoomRent(tenant.rent ? String(tenant.rent) : '');
+                    }
                     setPickerVisible(false);
                     setPickerSearch('');
                   }}

@@ -43,7 +43,7 @@ function toNumber(value: number | string | undefined): number {
   return Number.isNaN(amount) ? 0 : amount;
 }
 
-function extractTenantId(tenant: TenantRef | undefined): string {
+function extractTenantName(tenant: TenantRef | undefined): string {
   if (!tenant) {
     return '';
   }
@@ -52,13 +52,13 @@ function extractTenantId(tenant: TenantRef | undefined): string {
     return tenant;
   }
 
-  return String(tenant._id || tenant.id || '');
+  return String(tenant.name || tenant.name || '');
 }
 
 function normalizeTenantRent(rent: TenantRentApiItem): TenantRent {
   return {
     id: rent._id || '',
-    tenant: extractTenantId(rent.tenant),
+    tenant: extractTenantName(rent.tenant),
     month: rent.month ? new Date(rent.month) : new Date(),
     roomRent: toNumber(rent.roomRent),
     units: toNumber(rent.units),
@@ -92,11 +92,11 @@ export async function getTenantRents(): Promise<TenantRent[]> {
   const response = await api.get<
     TenantRentApiItem[] | { tenantRents: TenantRentApiItem[] }
   >('/tenant-rents');
-
+ 
   const rents = Array.isArray(response.data)
     ? response.data
     : response.data.tenantRents || [];
-
+console.log('API response for tenant rents:', rents);
   return rents.map(normalizeTenantRent);
 }
 
