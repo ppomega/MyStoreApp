@@ -27,6 +27,12 @@ import {
   OrderItem,
   updateOrder,
 } from "../services/ordersApi";
+import {
+  getOrderSlipDownloadUrl,
+  getOrderSlipFileName,
+  getOrderSlipUrl,
+} from "../services/orderSlipApi";
+import { downloadAndOpenPdf } from "../services/pdfDownloadApi";
 import { useAppTheme } from "../theme/ThemeContext";
 
 type OrderLine = {
@@ -111,6 +117,8 @@ export default function Orders() {
   const [quantity, setQuantity] = useState("1");
   const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [slipOrder, setSlipOrder] = useState<Order | null>(null);
+  const [openingSlipOrderId, setOpeningSlipOrderId] = useState("");
   const [statusUpdatingOrderId, setStatusUpdatingOrderId] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -380,6 +388,114 @@ export default function Orders() {
     return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
   };
 
+  const formatSlipDate = (value: string) => {
+    if (!value) {
+      return new Date().toLocaleString();
+    }
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  };
+
+  const openOrderSlip = async (order: Order, download = false) => {
+    if (!order.mongoId) {
+      Alert.alert("Slip unavailable", "This order does not have an id yet.");
+      return;
+    }
+
+    try {
+      setOpeningSlipOrderId(order.mongoId);
+      const slipUrl = download
+        ? getOrderSlipDownloadUrl(order.mongoId)
+        : getOrderSlipUrl(order.mongoId);
+      await downloadAndOpenPdf(
+        slipUrl,
+        getOrderSlipFileName(order.mongoId),
+      );
+      setSuccessMessage("Order slip downloaded.");
+    } catch {
+      Alert.alert("Slip failed", "Could not open the order slip PDF.");
+    } finally {
+      setOpeningSlipOrderId("");
+    }
+  };
+
+  const renderOrderSlip = () => {
+    if (!slipOrder) {
+      return null;
+    }
+
+    const slipItems = groupOrderItems(slipOrder.items);
+
+    return (
+      <Modal visible={Boolean(slipOrder)} animationType="slide" transparent>
+        <View style={[styles.pickerOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[styles.slipModal, { backgroundColor: colors.surface }]}>
+            <View style={styles.pickerHeader}>
+              <View>
+                <Text style={[styles.slipStoreName, { color: colors.text }]}>
+                  MyStore
+                </Text>
+                <Text style={[styles.slipMeta, { color: colors.textMuted }]}>
+                  Order Slip
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setSlipOrder(null)}>
+                <Text style={styles.closePicker}>Close</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.slipInfo, { borderColor: colors.border }]}>
+              <View>
+                <Text style={[styles.slipLabel, { color: colors.textMuted }]}>
+                  Bill to
+                </Text>
+                <Text style={[styles.slipValue, { color: colors.text }]}>
+                  {slipOrder.vendor || "Customer"}
+                </Text>
+              </View>
+              <View style={styles.slipRightInfo}>
+                <Text style={[styles.slipLabel, { color: colors.textMuted }]}>
+                  Date
+                </Text>
+                <Text style={[styles.slipValue, { color: colors.text }]}>
+                  {formatSlipDate(slipOrder.createdAt)}
+                </Text>
+              </View>
+            </View>
+
+            <ScrollView>
+              {slipItems.map((item, index) => (
+                <View
+                  key={`${slipOrder.mongoId}-slip-${item.itemId}-${item.mode}-${index}`}
+                  style={[styles.slipLine, { borderBottomColor: colors.border }]}
+                >
+                  <View style={styles.lineInfo}>
+                    <Text style={[styles.lineName, { color: colors.text }]}>
+                      {item.itemName}
+                    </Text>
+                    <Text style={[styles.lineMeta, { color: colors.textMuted }]}>
+                      {item.quantity} x Rs {item.price}
+                      {item.mode ? ` - ${formatOrderMode(item.mode)}` : ""}
+                    </Text>
+                  </View>
+                  <Text style={[styles.lineTotal, { color: colors.text }]}>
+                    Rs {item.quantity * item.price}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+
+            <View style={[styles.slipTotalRow, { borderTopColor: colors.border }]}>
+              <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
+              <Text style={styles.totalValue}>Rs {slipOrder.estimatedTotal}</Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.title, { color: colors.text }]}>Orders</Text>
@@ -452,11 +568,16 @@ export default function Orders() {
                 style={[styles.historyCard, { backgroundColor: colors.surface }]}
               >
                 <View style={styles.historyCardHeader}>
-                  <View>
-                    <Text style={[styles.historyTitle, { color: colors.text }]}>
+                  <View style={styles.historyTitleWrap}>
+                    <Text
+                      style={[styles.historyTitle, { color: colors.text }]}
+                      numberOfLines={2}
+                    >
                       {order.vendor || order.type || "Order"}
                     </Text>
-                    <Text style={[styles.historyText, { color: colors.textMuted }]}>
+                    <Text
+                      style={[styles.historyText, { color: colors.textMuted }]}
+                    >
                       {order.type ? `${order.type} - ` : ""}
                       {formatDate(order.createdAt)}
                     </Text>
@@ -493,6 +614,21 @@ export default function Orders() {
                       </Text>
                     </TouchableOpacity>
                     <View style={styles.historyActions}>
+                      <TouchableOpacity
+                        onPress={() => openOrderSlip(order)}
+                        disabled={openingSlipOrderId === order.mongoId}
+                      >
+                        <Text style={styles.historyActionSlip}>
+                          {openingSlipOrderId === order.mongoId
+                            ? "Opening..."
+                            : "Slip"}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setSlipOrder(order)}
+                      >
+                        <Text style={styles.historyActionPreview}>Preview</Text>
+                      </TouchableOpacity>
                       <TouchableOpacity onPress={() => startEditingOrder(order)}>
                         <Text style={styles.historyActionEdit}>Edit</Text>
                       </TouchableOpacity>
@@ -508,16 +644,18 @@ export default function Orders() {
                     key={`${order.mongoId}-${item.itemId}-${index}`}
                     style={[styles.historyLine, { borderTopColor: colors.border }]}
                   >
-                    <Text
-                      style={[styles.lineName, { color: colors.text }]}
-                      numberOfLines={1}
-                    >
-                      {item.itemName}
-                    </Text>
-                    <Text style={[styles.lineMeta, { color: colors.textMuted }]}>
-                      {item.quantity} x Rs {item.price}
-                      {item.mode ? ` - ${formatOrderMode(item.mode)}` : ""}
-                    </Text>
+                    <View style={styles.historyLineInfo}>
+                      <Text
+                        style={[styles.lineName, { color: colors.text }]}
+                        numberOfLines={2}
+                      >
+                        {item.itemName}
+                      </Text>
+                      <Text style={[styles.lineMeta, { color: colors.textMuted }]}>
+                        {item.quantity} x Rs {item.price}
+                        {item.mode ? ` - ${formatOrderMode(item.mode)}` : ""}
+                      </Text>
+                    </View>
                   </View>
                 ))}
 
@@ -839,6 +977,8 @@ export default function Orders() {
           </View>
         </View>
       </Modal>
+
+      {renderOrderSlip()}
     </View>
   );
 }
@@ -897,21 +1037,26 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   historyCardHeader: {
-    alignItems: "flex-start",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
+    alignItems: "stretch",
+    flexDirection: "column",
+    gap: 10,
+  },
+  historyTitleWrap: {
+    minWidth: 0,
+    width: "100%",
   },
   historyRight: {
-    alignItems: "flex-end",
-    minWidth: 112,
+    alignItems: "flex-start",
+    width: "100%",
   },
   historyActions: {
-    alignItems: "center",
+    alignItems: "flex-start",
     flexDirection: "row",
-    gap: 12,
-    justifyContent: "flex-end",
+    flexWrap: "wrap",
+    gap: 10,
+    justifyContent: "flex-start",
     marginTop: 8,
+    maxWidth: "100%",
   },
   statusBtn: {
     alignItems: "center",
@@ -936,6 +1081,10 @@ const styles = StyleSheet.create({
     borderTopColor: "#f0f0f0",
     marginTop: 10,
     paddingTop: 10,
+  },
+  historyLineInfo: {
+    minWidth: 0,
+    width: "100%",
   },
   panel: {
     backgroundColor: "#fff",
@@ -1103,6 +1252,8 @@ const styles = StyleSheet.create({
   lineTotal: { color: "#000", fontFamily: "JetBrains", fontWeight: "400" },
   editLine: { color: "#8a6200", fontFamily: "JetBrains", fontSize: 12 },
   historyActionEdit: { color: "#8a6200", fontFamily: "JetBrains", fontSize: 12 },
+  historyActionSlip: { color: "#1877f2", fontFamily: "JetBrains", fontSize: 12 },
+  historyActionPreview: { color: "#555", fontFamily: "JetBrains", fontSize: 12 },
   historyActionDelete: { color: "#c0392b", fontFamily: "JetBrains", fontSize: 12 },
   removeLine: { color: "#c0392b", fontFamily: "JetBrains", fontSize: 12, marginTop: 6 },
   emptyText: { color: "#777", fontFamily: "JetBrains", textAlign: "center", paddingVertical: 12 },
@@ -1195,4 +1346,57 @@ const styles = StyleSheet.create({
   pickerItemName: { color: "#000", fontFamily: "JetBrains", fontWeight: "400" },
   pickerItemCategory: { color: "#888", fontFamily: "JetBrains", fontSize: 12, marginTop: 3 },
   pickerItemPrice: { color: "#27ae60", fontFamily: "JetBrains", fontWeight: "400" },
+  slipModal: {
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    maxHeight: "82%",
+    padding: 14,
+  },
+  slipStoreName: {
+    fontFamily: "JetBrains",
+    fontSize: 20,
+    fontWeight: "400",
+  },
+  slipMeta: {
+    fontFamily: "JetBrains",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  slipInfo: {
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 10,
+    padding: 10,
+  },
+  slipRightInfo: {
+    alignItems: "flex-end",
+    flex: 1,
+  },
+  slipLabel: {
+    fontFamily: "JetBrains",
+    fontSize: 11,
+    marginBottom: 4,
+  },
+  slipValue: {
+    fontFamily: "JetBrains",
+    fontSize: 12,
+    fontWeight: "400",
+  },
+  slipLine: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+  },
+  slipTotalRow: {
+    borderTopWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 12,
+    paddingTop: 12,
+  },
 });

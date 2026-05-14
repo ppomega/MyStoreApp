@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Switch, View, TouchableOpacity, Text } from "react-native";
+import { View, TouchableOpacity, Text } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
 import Icon from "react-native-vector-icons/Entypo";
+import ThemeIcon from "react-native-vector-icons/FontAwesome";
 import { useAppTheme } from "../theme/ThemeContext";
 
 const TABS = [
@@ -24,40 +25,31 @@ export default function Nav() {
 
   return (
     <>
-      <View
+      <TouchableOpacity
+        accessibilityLabel="Toggle theme"
+        accessibilityRole="button"
+        onPress={toggleTheme}
         style={{
           position: "absolute",
           right: 14,
-          bottom: 124,
+          top: 12,
           backgroundColor: colors.surface,
           borderColor: colors.border,
-          borderRadius: 999,
+          borderRadius: 20,
           borderWidth: 1,
-          flexDirection: "row",
           alignItems: "center",
-          paddingLeft: 10,
-          paddingRight: 4,
-          paddingVertical: 3,
+          justifyContent: "center",
+          height: 40,
+          width: 40,
+          zIndex: 20,
         }}
       >
-        <Text
-          style={{
-            color: colors.text,
-            fontSize: 10,
-            fontWeight: "400",
-            fontFamily: "JetBrains",
-            marginRight: 6,
-          }}
-        >
-          {name === "dark" ? "Dark" : "Light"}
-        </Text>
-        <Switch
-          value={name === "dark"}
-          onValueChange={toggleTheme}
-          trackColor={{ false: "#d7d2c5", true: "#5f4700" }}
-          thumbColor={colors.accent}
+        <ThemeIcon
+          name={name === "dark" ? "sun-o" : "moon-o"}
+          size={19}
+          color={colors.accent}
         />
-      </View>
+      </TouchableOpacity>
       <View
         style={{
           flexDirection: "row",

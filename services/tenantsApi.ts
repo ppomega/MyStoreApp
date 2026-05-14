@@ -4,11 +4,11 @@ export type Tenant = {
   id: string;
   name: string;
   phone: string;
-  room: string;
   rent: number;
-  advance: number;
-  status: string;
-  notes: string;
+  doj: Date | undefined;
+  lastRent: Date | undefined;
+  lastCreditedValue: number;
+  lastDebitedValue: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -19,17 +19,12 @@ type TenantApiItem = {
   _id?: string;
   id?: string;
   name?: string;
-  tenantName?: string;
   phone?: string | number;
-  mobile?: string | number;
-  room?: string | number;
-  roomNumber?: string | number;
   rent?: string | number;
-  monthlyRent?: string | number;
-  advance?: string | number;
-  securityDeposit?: string | number;
-  status?: string;
-  notes?: string;
+  doj?: Date | string;
+  lastRent?: Date | string;
+  lastCreditedValue?: string | number;
+  lastDebitedValue?: string | number;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -53,19 +48,13 @@ function toNumber(value: string | number | undefined) {
 function normalizeTenant(tenant: TenantApiItem): Tenant {
   return {
     id: tenant.id || tenant._id || '',
-    name: tenant.name || tenant.tenantName || '',
-    phone:
-      tenant.phone === undefined
-        ? String(tenant.mobile || '')
-        : String(tenant.phone),
-    room:
-      tenant.room === undefined
-        ? String(tenant.roomNumber || '')
-        : String(tenant.room),
-    rent: toNumber(tenant.rent || tenant.monthlyRent),
-    advance: toNumber(tenant.advance || tenant.securityDeposit),
-    status: tenant.status || 'Active',
-    notes: tenant.notes || '',
+    name: tenant.name || '',
+    phone: tenant.phone === undefined ? '' : String(tenant.phone),
+    rent: toNumber(tenant.rent),
+    doj: tenant.doj ? new Date(tenant.doj) : undefined,
+    lastRent: tenant.lastRent ? new Date(tenant.lastRent) : undefined,
+    lastCreditedValue: toNumber(tenant.lastCreditedValue),
+    lastDebitedValue: toNumber(tenant.lastDebitedValue),
     createdAt: tenant.createdAt || '',
     updatedAt: tenant.updatedAt || '',
   };
@@ -83,11 +72,11 @@ function serializeTenantForApi(tenant: TenantInput) {
   return {
     name: tenant.name,
     phone: tenant.phone,
-    room: tenant.room,
     rent: tenant.rent,
-    advance: tenant.advance,
-    status: tenant.status,
-    notes: tenant.notes,
+    doj: tenant.doj,
+    lastRent: tenant.lastRent,
+    lastCreditedValue: tenant.lastCreditedValue,
+    lastDebitedValue: tenant.lastDebitedValue,
   };
 }
 

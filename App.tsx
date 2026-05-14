@@ -1,7 +1,8 @@
 import React from "react";
-import { Text, TextInput } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import Nav from "./Nav/Nav";
 import { DashBoard } from "./DashBoard/DashBoard";
@@ -49,16 +50,21 @@ function AppShell() {
 
   return (
     <NavigationContainer theme={navigationTheme}>
-
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Main" component={DashBoard} />
-        <Stack.Screen name="Orders" component={Orders} />
-        <Stack.Screen name="Inventory" component={Inventory} />
-        <Stack.Screen name="Tenants" component={Tenants} />
-        <Stack.Screen name="Borrowers" component={Borrowers} />
-      </Stack.Navigator>
-          <Nav/>
-
+      <SafeAreaView
+        edges={["top"]}
+        style={{ flex: 1, backgroundColor: colors.background }}
+      >
+        <View style={{ flex: 1 }}>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Main" component={DashBoard} />
+            <Stack.Screen name="Orders" component={Orders} />
+            <Stack.Screen name="Inventory" component={Inventory} />
+            <Stack.Screen name="Tenants" component={Tenants} />
+            <Stack.Screen name="Borrowers" component={Borrowers} />
+          </Stack.Navigator>
+          <Nav />
+        </View>
+      </SafeAreaView>
     </NavigationContainer>
   );
 }
@@ -66,7 +72,9 @@ function AppShell() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AppShell />
+      <SafeAreaProvider>
+        <AppShell />
+      </SafeAreaProvider>
     </ThemeProvider>
   );
 }
