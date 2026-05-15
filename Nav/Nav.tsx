@@ -35,7 +35,7 @@ export default function Nav() {
           top: 12,
           backgroundColor: colors.surface,
           borderColor: colors.border,
-          borderRadius: 20,
+          borderRadius: 16,
           borderWidth: 1,
           alignItems: "center",
           justifyContent: "center",
@@ -63,7 +63,7 @@ export default function Nav() {
           backgroundColor: colors.nav,
           borderColor: colors.border,
         //   borderWidth: 0.3,
-          borderRadius: 12,
+          borderRadius: 8,
           
         }}
       >
@@ -74,7 +74,7 @@ export default function Nav() {
               width: width / (TABS.length+1),
               bottom: 0,
               height: "100%",
-              backgroundColor: "#000",
+              backgroundColor: "#231512",
               borderRadius: 12,
             },
           ]}
@@ -82,7 +82,7 @@ export default function Nav() {
 
         {TABS.map((tab, index) => {
           const isActive = activeIndex === index;
-          const activeTextColor = name === "dark" ? "#000" : "#fff";
+          const activeTextColor = name === "dark" ? "#110702" : "#fff";
 
           return (
             <View key={tab.route} style={{ flex: 1, 
@@ -91,29 +91,29 @@ export default function Nav() {
                 width: `${100 / TABS.length}%`,
                 height: "100%",
                 backgroundColor: isActive ? colors.navActive : "transparent",
-                borderRadius:isActive ? 12 : 0,
+                borderRadius:isActive ? 6 : 0,
              }}>
             <TouchableOpacity
               key={tab.route}
               onPress={() => handlePress(index, tab.route)}
               style={{
                 flex: 1,
-               borderRadius: 12,
+               borderRadius: 6,
                 alignItems: "center",
               }}
             >
               <Icon
                 name={tab.icon}
                 size={24}
-                color={isActive && name === "dark" ? "#000" : "#fcc01e"}
+                color={isActive && name === "dark" ? "#110702" : "#f1e5ac"}
                 style={{ position: "relative", top: 6 }}
               />
               <Text
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 style={{
-                  fontFamily: "JetBrains",
-                  fontSize: 9,
+                  fontFamily: "Nippo-Medium",
+                  fontSize: 13,
                   paddingTop: 5,
                   color: isActive ? activeTextColor : colors.text,
                 }}

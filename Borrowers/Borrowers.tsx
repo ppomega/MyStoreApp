@@ -457,7 +457,7 @@ export default function BorrowersScreen() {
                 {
                   color:
                     activeTab === tab
-                      ? colors.navActive === colors.accent ? '#000' : '#fff'
+                      ? colors.navActive === colors.accent ? '#231512' : '#fff'
                       : colors.text,
                 },
               ]}
@@ -489,7 +489,7 @@ export default function BorrowersScreen() {
           </TouchableOpacity>
 
           {borrowersLoading ? (
-            <ActivityIndicator color="#fcc01e" style={{ marginTop: 24 }} />
+            <ActivityIndicator color="#f1e5ac" style={{ marginTop: 24 }} />
           ) : borrowersError ? (
             <View style={styles.emptyState}>
               <Text style={styles.errorText}>{borrowersError}</Text>
@@ -534,7 +534,7 @@ export default function BorrowersScreen() {
                     {
                       color:
                         debtActiveView === sub
-                          ? colors.navActive === colors.accent ? '#000' : '#fff'
+                          ? colors.navActive === colors.accent ? '#231512' : '#fff'
                           : colors.text,
                     },
                   ]}
@@ -549,7 +549,7 @@ export default function BorrowersScreen() {
           {debtActiveView === 'history' ? (
             <ScrollView contentContainerStyle={styles.listContent}>
               {debtsLoading ? (
-                <ActivityIndicator color="#fcc01e" style={{ marginTop: 24 }} />
+                <ActivityIndicator color="#f1e5ac" style={{ marginTop: 24 }} />
               ) : debtsError ? (
                 <View style={styles.emptyState}>
                   <Text style={styles.errorText}>{debtsError}</Text>
@@ -699,7 +699,7 @@ export default function BorrowersScreen() {
                     {
                       color:
                         paymentActiveView === sub
-                          ? colors.navActive === colors.accent ? '#000' : '#fff'
+                          ? colors.navActive === colors.accent ? '#231512' : '#fff'
                           : colors.text,
                     },
                   ]}
@@ -714,7 +714,7 @@ export default function BorrowersScreen() {
           {paymentActiveView === 'history' ? (
             <ScrollView contentContainerStyle={styles.listContent}>
               {paymentsLoading ? (
-                <ActivityIndicator color="#fcc01e" style={{ marginTop: 24 }} />
+                <ActivityIndicator color="#f1e5ac" style={{ marginTop: 24 }} />
               ) : paymentsError ? (
                 <View style={styles.emptyState}>
                   <Text style={styles.errorText}>{paymentsError}</Text>
@@ -1020,7 +1020,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
   },
-  viewSwitchText: { fontFamily: 'JetBrains', fontSize: 13 },
+  viewSwitchText: { fontFamily: 'Nippo-Medium', fontSize: 13 },
 
   subSwitch: {
     borderRadius: 8,
@@ -1034,13 +1034,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
   },
-  subSwitchText: { fontFamily: 'JetBrains', fontSize: 12 },
+  subSwitchText: { fontFamily: 'Nippo-Medium', fontSize: 12 },
 
   // Search
   searchIcon: { left: 10, position: 'absolute', top: 12, zIndex: 1 },
   search: {
     borderRadius: 10,
-    fontFamily: 'JetBrains',
+    fontFamily: 'Nippo-Medium',
     height: 45,
     marginBottom: 10,
     paddingHorizontal: 30,
@@ -1049,12 +1049,12 @@ const styles = StyleSheet.create({
   // Add button
   addBtn: {
     alignItems: 'center',
-    backgroundColor: '#fcc01e',
+    backgroundColor: '#f1e5ac',
     borderRadius: 10,
     marginBottom: 10,
     padding: 10,
   },
-  addText: { color: '#000', fontFamily: 'JetBrains', fontWeight: '400' },
+  addText: { color: '#231512', fontFamily: 'Nippo-Medium', fontWeight: '400' },
 
   // List
   listContent: { paddingBottom: 130 },
@@ -1075,11 +1075,11 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 4,
   },
-  name: { fontFamily: 'JetBrains', fontSize: 16, fontWeight: '400' },
-  meta: { fontFamily: 'JetBrains', fontSize: 12, marginTop: 4 },
+  name: { fontFamily: 'Nippo-Medium', fontSize: 16, fontWeight: '400' },
+  meta: { fontFamily: 'Nippo-Medium', fontSize: 12, marginTop: 4 },
   amountRow: { flexDirection: 'row', gap: 34, marginTop: 14 },
-  label: { fontFamily: 'JetBrains', fontSize: 11, marginBottom: 3 },
-  amount: { color: '#e74c3c', fontFamily: 'JetBrains', fontWeight: '400' },
+  label: { fontFamily: 'Nippo-Medium', fontSize: 11, marginBottom: 3 },
+  amount: { color: '#e74c3c', fontFamily: 'Nippo-Medium', fontWeight: '400' },
   cardActions: {
     borderTopWidth: 1,
     flexDirection: 'row',
@@ -1095,7 +1095,7 @@ const styles = StyleSheet.create({
   },
   editBtn: { backgroundColor: '#8a6200' },
   deleteBtn: { backgroundColor: '#c0392b' },
-  actionText: { color: '#fff', fontFamily: 'JetBrains', fontWeight: '400' },
+  actionText: { color: '#fff', fontFamily: 'Nippo-Medium', fontWeight: '400' },
 
   // Empty / error
   emptyPanel: {
@@ -1111,15 +1111,15 @@ const styles = StyleSheet.create({
     marginTop: 32,
     paddingHorizontal: 20,
   },
-  emptyText: { fontFamily: 'JetBrains', marginTop: 24, textAlign: 'center' },
-  errorText: { color: '#e74c3c', fontFamily: 'JetBrains', textAlign: 'center' },
+  emptyText: { fontFamily: 'Nippo-Medium', marginTop: 24, textAlign: 'center' },
+  errorText: { color: '#e74c3c', fontFamily: 'Nippo-Medium', textAlign: 'center' },
   retryBtn: {
-    backgroundColor: '#fcc01e',
+    backgroundColor: '#f1e5ac',
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
-  retryText: { color: '#000', fontFamily: 'JetBrains' },
+  retryText: { color: '#231512', fontFamily: 'Nippo-Medium' },
 
   // Debt form
   panel: { borderRadius: 12, padding: 14 },
@@ -1132,7 +1132,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 12,
   },
-  cancelText: { color: '#c0392b', fontFamily: 'JetBrains', fontWeight: '400' },
+  cancelText: { color: '#c0392b', fontFamily: 'Nippo-Medium', fontWeight: '400' },
   itemSelector: {
     borderWidth: 1,
     borderRadius: 8,
@@ -1142,22 +1142,22 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 10,
   },
-  selectorValue: { fontFamily: 'JetBrains', fontWeight: '400', maxWidth: 240 },
+  selectorValue: { fontFamily: 'Nippo-Medium', fontWeight: '400', maxWidth: 240 },
   input: {
     borderRadius: 8,
     borderWidth: 1,
-    fontFamily: 'JetBrains',
+    fontFamily: 'Nippo-Medium',
     marginBottom: 10,
     padding: 10,
   },
   saveBtn: {
     alignItems: 'center',
-    backgroundColor: '#fcc01e',
+    backgroundColor: '#f1e5ac',
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
-  saveBtnText: { color: '#000', fontFamily: 'JetBrains', fontWeight: '400' },
+  saveBtnText: { color: '#231512', fontFamily: 'Nippo-Medium', fontWeight: '400' },
   disabledBtn: { opacity: 0.5 },
 
   // Toast
@@ -1174,8 +1174,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 12,
   },
-  toastText: { color: '#fff', fontFamily: 'JetBrains', fontWeight: '400' },
-  toastDismiss: { color: '#fcc01e', fontFamily: 'JetBrains', fontWeight: '400' },
+  toastText: { color: '#fff', fontFamily: 'Nippo-Medium', fontWeight: '400' },
+  toastDismiss: { color: '#f1e5ac', fontFamily: 'Nippo-Medium', fontWeight: '400' },
 
   // Borrower modal
   overlay: { flex: 1, justifyContent: 'center' },
@@ -1189,7 +1189,7 @@ const styles = StyleSheet.create({
     width: '85%',
   },
   modalTitle: {
-    fontFamily: 'JetBrains',
+    fontFamily: 'Nippo-Medium',
     fontSize: 18,
     fontWeight: '400',
     marginBottom: 16,
@@ -1216,14 +1216,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  cancelDeleteText: { fontFamily: 'JetBrains', fontWeight: '400' },
+  cancelDeleteText: { fontFamily: 'Nippo-Medium', fontWeight: '400' },
   confirmDeleteBtn: {
     backgroundColor: '#e74c3c',
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  confirmDeleteText: { color: '#fff', fontFamily: 'JetBrains', fontWeight: '400' },
+  confirmDeleteText: { color: '#fff', fontFamily: 'Nippo-Medium', fontWeight: '400' },
 
   // Debt picker modal
   pickerOverlay: { flex: 1, justifyContent: 'flex-end' },
@@ -1239,7 +1239,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  closePicker: { color: '#8a6200', fontFamily: 'JetBrains', fontWeight: '400' },
+  closePicker: { color: '#8a6200', fontFamily: 'Nippo-Medium', fontWeight: '400' },
   pickerItem: {
     borderBottomWidth: 1,
     flexDirection: 'row',
@@ -1247,5 +1247,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
   },
-  pickerItemName: { fontFamily: 'JetBrains', fontWeight: '400' },
+  pickerItemName: { fontFamily: 'Nippo-Medium', fontWeight: '400' },
 });

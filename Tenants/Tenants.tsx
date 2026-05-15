@@ -502,7 +502,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
   <Text
     style={{
       color: rentMonth ? colors.text : '#999',
-      fontFamily: 'JetBrains',
+      fontFamily: 'Nippo-Medium',
     }}
   >
     {rentMonth || 'Select month'}
@@ -579,7 +579,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                         color:
                           rentStatus === status &&
                           colors.navActive === colors.accent
-                            ? '#000'
+                            ? '#231512'
                             : colors.text,
                       },
                     ]}
@@ -753,7 +753,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                 {
                   color:
                     recordView === view && colors.navActive === colors.accent
-                      ? '#000'
+                      ? '#231512'
                       : colors.text,
                 },
               ]}
@@ -767,7 +767,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
       {recordView === 'new' ? (
         renderRecordForm()
       ) : recordsLoading ? (
-        <ActivityIndicator color="#fcc01e" style={{ marginTop: 24 }} />
+        <ActivityIndicator color="#f1e5ac" style={{ marginTop: 24 }} />
       ) : recordsError ? (
         <View style={styles.emptyState}>
           <Text style={styles.errorText}>{recordsError}</Text>
@@ -802,7 +802,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                 {
                   color:
                     activeTab === tab && colors.navActive === colors.accent
-                      ? '#000'
+                      ? '#231512'
                       : colors.text,
                 },
               ]}
@@ -834,7 +834,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
           </TouchableOpacity>
 
           {loading ? (
-            <ActivityIndicator color="#fcc01e" style={{ marginTop: 24 }} />
+            <ActivityIndicator color="#f1e5ac" style={{ marginTop: 24 }} />
           ) : error ? (
             <View style={styles.emptyState}>
               <Text style={styles.errorText}>{error}</Text>
@@ -1043,70 +1043,70 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 12 },
   viewSwitch: { borderRadius: 10, flexDirection: 'row', marginBottom: 12, padding: 4 },
   viewSwitchBtn: { alignItems: 'center', borderRadius: 8, flex: 1, paddingVertical: 10 },
-  viewSwitchText: { fontFamily: 'JetBrains', fontSize: 13 },
+  viewSwitchText: { fontFamily: 'Nippo-Medium', fontSize: 13 },
   subSwitch: { borderRadius: 8, flexDirection: 'row', marginBottom: 10, padding: 3 },
   subSwitchBtn: { alignItems: 'center', borderRadius: 6, flex: 1, paddingVertical: 8 },
-  subSwitchText: { fontFamily: 'JetBrains', fontSize: 12 },
+  subSwitchText: { fontFamily: 'Nippo-Medium', fontSize: 12 },
   searchIcon: { left: 10, position: 'absolute', top: 12, zIndex: 1 },
-  search: { borderRadius: 10, fontFamily: 'JetBrains', height: 45, marginBottom: 10, paddingHorizontal: 30 },
-  addBtn: { alignItems: 'center', backgroundColor: '#fcc01e', borderRadius: 10, marginBottom: 10, padding: 10 },
-  addText: { color: '#000', fontFamily: 'JetBrains', fontWeight: '400' },
+  search: { borderRadius: 10, fontFamily: 'Nippo-Medium', height: 45, marginBottom: 10, paddingHorizontal: 30 },
+  addBtn: { alignItems: 'center', backgroundColor: '#f1e5ac', borderRadius: 10, marginBottom: 10, padding: 10 },
+  addText: { color: '#231512', fontFamily: 'Nippo-Medium', fontWeight: '400' },
   listContent: { paddingBottom: 130 },
   card: { borderRadius: 12, marginBottom: 12, padding: 14 },
   cardHeader: { alignItems: 'flex-start', flexDirection: 'row', gap: 10, justifyContent: 'space-between' },
   cardTitleWrap: { flex: 1 },
-  name: { fontFamily: 'JetBrains', fontSize: 16, fontWeight: '400' },
-  meta: { fontFamily: 'JetBrains', fontSize: 12, marginTop: 4 },
-  statusPill: { borderRadius: 8, fontFamily: 'JetBrains', fontSize: 11, overflow: 'hidden', paddingHorizontal: 9, paddingVertical: 6 },
+  name: { fontFamily: 'Nippo-Medium', fontSize: 16, fontWeight: '400' },
+  meta: { fontFamily: 'Nippo-Medium', fontSize: 12, marginTop: 4 },
+  statusPill: { borderRadius: 8, fontFamily: 'Nippo-Medium', fontSize: 11, overflow: 'hidden', paddingHorizontal: 9, paddingVertical: 6 },
   amountRow: { flexDirection: 'row', gap: 34, marginTop: 14 },
-  label: { fontFamily: 'JetBrains', fontSize: 11, marginBottom: 3 },
-  amount: { color: '#27ae60', fontFamily: 'JetBrains', fontWeight: '400' },
-  notes: { fontFamily: 'JetBrains', fontSize: 12, lineHeight: 18, marginTop: 12 },
+  label: { fontFamily: 'Nippo-Medium', fontSize: 11, marginBottom: 3 },
+  amount: { color: '#27ae60', fontFamily: 'Nippo-Medium', fontWeight: '400' },
+  notes: { fontFamily: 'Nippo-Medium', fontSize: 12, lineHeight: 18, marginTop: 12 },
   panel: { borderRadius: 12, padding: 14 },
   editingBanner: { alignItems: 'center', borderBottomColor: '#f0f0f0', borderBottomWidth: 1, flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12, paddingBottom: 12 },
-  cancelText: { color: '#c0392b', fontFamily: 'JetBrains', fontWeight: '400' },
+  cancelText: { color: '#c0392b', fontFamily: 'Nippo-Medium', fontWeight: '400' },
   itemSelector: { alignItems: 'center', borderRadius: 8, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, padding: 12 },
-  selectorValue: { fontFamily: 'JetBrains', fontWeight: '400', maxWidth: 240 },
+  selectorValue: { fontFamily: 'Nippo-Medium', fontWeight: '400', maxWidth: 240 },
   actions: { borderTopWidth: 1, flexDirection: 'row', gap: 10, marginTop: 14, paddingTop: 12 },
   actionBtn: { alignItems: 'center', borderRadius: 8, flex: 1, paddingVertical: 9 },
   payBtn: { backgroundColor: '#111' },
   editBtn: { backgroundColor: '#8a6200' },
   deleteBtn: { backgroundColor: '#c0392b' },
-  actionText: { color: '#fff', fontFamily: 'JetBrains', fontWeight: '400' },
+  actionText: { color: '#fff', fontFamily: 'Nippo-Medium', fontWeight: '400' },
   emptyState: { alignItems: 'center', gap: 12, marginTop: 32, paddingHorizontal: 20 },
-  emptyText: { fontFamily: 'JetBrains', marginTop: 24, textAlign: 'center' },
-  errorText: { color: '#e74c3c', fontFamily: 'JetBrains', textAlign: 'center' },
-  retryBtn: { backgroundColor: '#fcc01e', borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
-  retryText: { color: '#000', fontFamily: 'JetBrains' },
+  emptyText: { fontFamily: 'Nippo-Medium', marginTop: 24, textAlign: 'center' },
+  errorText: { color: '#e74c3c', fontFamily: 'Nippo-Medium', textAlign: 'center' },
+  retryBtn: { backgroundColor: '#f1e5ac', borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
+  retryText: { color: '#231512', fontFamily: 'Nippo-Medium' },
   toast: { alignItems: 'center', backgroundColor: '#111', borderRadius: 10, bottom: 135, flexDirection: 'row', justifyContent: 'space-between', left: 12, paddingHorizontal: 14, paddingVertical: 12, position: 'absolute', right: 12 },
-  toastText: { color: '#fff', fontFamily: 'JetBrains', fontWeight: '400' },
-  toastDismiss: { color: '#fcc01e', fontFamily: 'JetBrains', fontWeight: '400' },
+  toastText: { color: '#fff', fontFamily: 'Nippo-Medium', fontWeight: '400' },
+  toastDismiss: { color: '#f1e5ac', fontFamily: 'Nippo-Medium', fontWeight: '400' },
   overlay: { flex: 1, justifyContent: 'center' },
   modal: { borderRadius: 12, bottom: '8%', left: '8%', maxHeight: '78%', padding: 20, position: 'absolute', width: '85%' },
-  title: { fontFamily: 'JetBrains', fontSize: 18, fontWeight: '400', marginBottom: 16 },
-  input: { borderRadius: 8, borderWidth: 1, fontFamily: 'JetBrains', marginBottom: 10, padding: 10 },
+  title: { fontFamily: 'Nippo-Medium', fontSize: 18, fontWeight: '400', marginBottom: 16 },
+  input: { borderRadius: 8, borderWidth: 1, fontFamily: 'Nippo-Medium', marginBottom: 10, padding: 10 },
   formRow: { flexDirection: 'row', gap: 10 },
   halfInput: { flex: 1 },
   statusRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   statusBtn: { alignItems: 'center', borderRadius: 8, flex: 1, paddingVertical: 10 },
-  statusBtnText: { fontFamily: 'JetBrains', fontSize: 12, fontWeight: '400' },
+  statusBtnText: { fontFamily: 'Nippo-Medium', fontSize: 12, fontWeight: '400' },
   notesInput: { minHeight: 76, textAlignVertical: 'top' },
   modalActions: { flexDirection: 'row', gap: 10, justifyContent: 'space-between', marginTop: 10 },
-  saveBtn: { alignItems: 'center', backgroundColor: '#fcc01e', borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
-  saveText: { color: '#000', fontFamily: 'JetBrains' },
+  saveBtn: { alignItems: 'center', backgroundColor: '#f1e5ac', borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
+  saveText: { color: '#231512', fontFamily: 'Nippo-Medium' },
   disabledBtn: { opacity: 0.7 },
   confirmOverlay: { flex: 1, justifyContent: 'center', paddingHorizontal: 28 },
   confirmBox: { borderRadius: 12, padding: 18 },
-  confirmTitle: { fontFamily: 'JetBrains', fontSize: 18, fontWeight: '400', marginBottom: 8 },
-  confirmText: { fontFamily: 'JetBrains', fontSize: 14, lineHeight: 20 },
+  confirmTitle: { fontFamily: 'Nippo-Medium', fontSize: 18, fontWeight: '400', marginBottom: 8 },
+  confirmText: { fontFamily: 'Nippo-Medium', fontSize: 14, lineHeight: 20 },
   confirmActions: { flexDirection: 'row', gap: 10, justifyContent: 'flex-end', marginTop: 18 },
   cancelDeleteBtn: { borderRadius: 8, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10 },
-  cancelDeleteText: { fontFamily: 'JetBrains', fontWeight: '400' },
+  cancelDeleteText: { fontFamily: 'Nippo-Medium', fontWeight: '400' },
   confirmDeleteBtn: { backgroundColor: '#e74c3c', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 10 },
-  confirmDeleteText: { color: '#fff', fontFamily: 'JetBrains', fontWeight: '400' },
+  confirmDeleteText: { color: '#fff', fontFamily: 'Nippo-Medium', fontWeight: '400' },
   pickerOverlay: { flex: 1, justifyContent: 'flex-end' },
   picker: { borderTopLeftRadius: 12, borderTopRightRadius: 12, maxHeight: '78%', padding: 14 },
   pickerHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  closePicker: { color: '#8a6200', fontFamily: 'JetBrains', fontWeight: '400' },
+  closePicker: { color: '#8a6200', fontFamily: 'Nippo-Medium', fontWeight: '400' },
   pickerItem: { alignItems: 'center', borderBottomWidth: 1, flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12 },
 });

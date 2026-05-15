@@ -31,7 +31,7 @@ type TenantPaymentApiResponse =
 
 const api = axios.create({
   baseURL: __SERVER_URL__,
-  timeout: 10000,
+  timeout: 12315120,
 });
 
 function toNumber(value: number | string | undefined): number {

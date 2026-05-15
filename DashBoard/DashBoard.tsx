@@ -11,9 +11,9 @@ export function DashBoard() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* <FontAwesomeFreeSolid name="home" size={64} color="#fcc01e" style={{ marginBottom: 20 }} /> */}
-        {/* <Icon name="house" color="#fcc01e" size={20} /> */}
-<Icon name="home" size={40} color="#fcc01e" />
+        {/* <FontAwesomeFreeSolid name="home" size={64} color="#f1e5ac" style={{ marginBottom: 20 }} /> */}
+        {/* <Icon name="house" color="#f1e5ac" size={20} /> */}
+<Icon name="home" size={40} color="#f1e5ac" />
     </View>
   );
 }
@@ -28,28 +28,28 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     fontWeight: "400",
     marginBottom: 10,
-    color: "#000",
+    color: "#231512",
   },
   subtitle: {
     fontSize: 16,
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     textAlign: "center",
     color: "#333",
     marginBottom: 30,
   },
   card: {
     width: "100%",
-    backgroundColor: "#fcc01e",
+    backgroundColor: "#f1e5ac",
     padding: 20,
     borderRadius: 12,
     marginBottom: 15,
   },
   cardTitle: {
     fontSize: 16,
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     fontWeight: "400",
   },
 });

@@ -2,8 +2,136 @@
   "migIndex": 1,
   "data": [
     {
-      "path": "assets/fonts/JetBrains.ttf",
+      "path": "assets/fonts/Nippo-Medium.ttf",
       "sha1": "f2cb906a2416e6981bdf29932661b0e92600c8d4"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/OTF/Nippo-Bold.otf",
+      "sha1": "80e28c5172b151779f96ec5c15f7f970030b6222"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/OTF/Nippo-Extralight.otf",
+      "sha1": "65632ca557fb8179b8ffac363869cab715aef981"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/OTF/Nippo-Light.otf",
+      "sha1": "545d21c5aafa8b3ee75bb654454d5082c0847907"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/OTF/Nippo-Medium.otf",
+      "sha1": "4db704c06447a7ff611d48bab0ea0beaae7fd03d"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/OTF/Nippo-Regular.otf",
+      "sha1": "7909e681da13aa96299795a366ebdb9b3a72ef86"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/css/nippo.css",
+      "sha1": "b36a1a9d811e50478cfdc3326b504cba47b16976"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Bold.eot",
+      "sha1": "10ef080d92a6353eae0dcae9b3575ad328138df0"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Bold.ttf",
+      "sha1": "ed7d9b5ba77bd851ba628f4d88a9b2f432d527d4"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Bold.woff",
+      "sha1": "49cc6f274104f22cf4fc14405649995a6855d33d"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Bold.woff2",
+      "sha1": "29ffb4fdc9f0f07c9f6a300520b044cbaa308d5d"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Extralight.eot",
+      "sha1": "58d752fdeece3622ccd5a87ccebe188dd038e84e"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Extralight.ttf",
+      "sha1": "3a20101d5253526fac6e8015bff84e4d31458645"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Extralight.woff",
+      "sha1": "a662de6a5444ae8c25a616f0066cd4c169d3157e"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Extralight.woff2",
+      "sha1": "3dbf6ba1de37379b4c8e56c802ab548fc517965b"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Light.eot",
+      "sha1": "26a91c5eaf41b9c7f884cc3790379e964ca4bad7"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Light.ttf",
+      "sha1": "7b995e190ce0b447cac284711a2b9b33cc6dd4bb"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Light.woff",
+      "sha1": "b87db888aeb07704ed2385fdc6586bc61370d532"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Light.woff2",
+      "sha1": "ca2e7c01466eeff17a8eabf19e6935cb4f6f11ca"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Medium.eot",
+      "sha1": "c8fdc549047f14f19b5dd18abfe256653743a103"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Medium.ttf",
+      "sha1": "821befba190659a29454b2dac84c5e67fb592581"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Medium.woff",
+      "sha1": "2c142b625aa912f663adc4a0bee2ff7f4c109324"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Medium.woff2",
+      "sha1": "484694128b24c66cd2cc17fe85710f7f90b5f3bc"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Regular.eot",
+      "sha1": "4a7c082681ebf0727d6166105dfb88e70fc6079b"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Regular.ttf",
+      "sha1": "c49996049dad7f964aa325bcc4365839a54e6957"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Regular.woff",
+      "sha1": "693856a5b1077eb5094353d5d51b127101af1875"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Regular.woff2",
+      "sha1": "4872eca0c3d677049be1fb61acfb1a214a094503"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Variable.eot",
+      "sha1": "28a0952df44eef0c9eeb88184837c32fe6388198"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Variable.ttf",
+      "sha1": "4ce39abce3d6e5fe117036ee86e88365f53876f4"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Variable.woff",
+      "sha1": "572cc5ab8429e7f15135bf5304d0061802262b40"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/fonts/Nippo-Variable.woff2",
+      "sha1": "6bcf85151463d152fafa8b311623151287028c33543"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/Fonts/WEB/README.md",
+      "sha1": "c7449e6ab302db8ed7a49e216874adc6b9796e7f"
+    },
+    {
+      "path": "assets/fonts/Nippo_Complete/Nippo_Complete/License/FFL.txt",
+      "sha1": "6f0e23cc458c571fc14c44ae73747cae114c7a54"
     },
     {
       "path": "node_modules/react-native-vector-icons/Fonts/AntDesign.ttf",

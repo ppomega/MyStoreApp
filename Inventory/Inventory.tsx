@@ -343,16 +343,16 @@ export default function Inventory() {
       </View>
 
       <TouchableOpacity style={styles.addBtn} onPress={openCreateModal}>
-        <Text style={{ color: "#fff", fontFamily: "JetBrains", fontWeight: "400" }}>+ Add Item</Text>
+        <Text style={{ color: "#fff", fontFamily: "Nippo-Medium", fontWeight: "400" }}>+ Add Item</Text>
       </TouchableOpacity>
 
       {loading ? (
-        <ActivityIndicator color="#fcc01e" style={{ marginTop: 24 }} />
+        <ActivityIndicator color="#f1e5ac" style={{ marginTop: 24 }} />
       ) : error ? (
         <View style={styles.emptyState}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={loadInventory}>
-            <Text style={{ color: "#000", fontFamily: "JetBrains" }}>Retry</Text>
+            <Text style={{ color: "#231512", fontFamily: "Nippo-Medium" }}>Retry</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -484,7 +484,7 @@ export default function Inventory() {
                               color:
                                 hasSelectedMode(form.mode, modeKey) &&
                                 colors.navActive === colors.accent
-                                  ? "#000"
+                                  ? "#231512"
                                   : hasSelectedMode(form.mode, modeKey)
                                   ? colors.accent
                                   : colors.text,
@@ -562,7 +562,7 @@ export default function Inventory() {
                               color:
                                 form.defaultMode === modeKey &&
                                 colors.navActive === colors.accent
-                                  ? "#000"
+                                  ? "#231512"
                                   : form.defaultMode === modeKey
                                   ? colors.accent
                                   : colors.text,
@@ -618,7 +618,7 @@ export default function Inventory() {
                 onPress={handleSave}
                 disabled={saving}
               >
-                <Text style={{ color: "#000", fontFamily: "JetBrains" }}>
+                <Text style={{ color: "#231512", fontFamily: "Nippo-Medium" }}>
                   {saving ? "Saving..." : "Save"}
                 </Text>
               </TouchableOpacity>
@@ -627,7 +627,7 @@ export default function Inventory() {
                 onPress={() => setModalVisible(false)}
                 style={styles.saveBtn}
               >
-                <Text style={{ color: "#000", fontFamily: "JetBrains" }}>Cancel</Text>
+                <Text style={{ color: "#231512", fontFamily: "Nippo-Medium" }}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
   },
 
   search: {
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     height: 45,
     backgroundColor: "#fff",
     borderRadius: 10,
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
   },
 
   addBtn: {
-    backgroundColor: "#fcc01e",
+    backgroundColor: "#f1e5ac",
     padding: 10,
     borderRadius: 10,
     alignItems: "center",
@@ -707,9 +707,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
-  name: { fontFamily: "JetBrains", fontWeight: "400", fontSize: 15, lineHeight: 20 },
-  category: { fontFamily: "JetBrains", fontSize: 11, color: "#888", marginTop: 4 },
-  mode: { fontFamily: "JetBrains", fontSize: 11, color: "#555", lineHeight: 16, marginTop: 12 },
+  name: { fontFamily: "Nippo-Medium", fontWeight: "400", fontSize: 15, lineHeight: 20 },
+  category: { fontFamily: "Nippo-Medium", fontSize: 11, color: "#888", marginTop: 4 },
+  mode: { fontFamily: "Nippo-Medium", fontSize: 11, color: "#555", lineHeight: 16, marginTop: 12 },
 
   details: {
     gap: 10,
@@ -717,7 +717,7 @@ const styles = StyleSheet.create({
   },
 
   priceLabel: {
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     color: "#999",
     fontSize: 10,
     marginBottom: 2,
@@ -725,8 +725,8 @@ const styles = StyleSheet.create({
 
   row: { flexDirection: "row", justifyContent: "space-between" },
 
-  buy: { color: "#e74c3c", fontFamily: "JetBrains", fontWeight: "400" },
-  sell: { color: "#27ae60", fontFamily: "JetBrains", fontWeight: "400" },
+  buy: { color: "#e74c3c", fontFamily: "Nippo-Medium", fontWeight: "400" },
+  sell: { color: "#27ae60", fontFamily: "Nippo-Medium", fontWeight: "400" },
 
   actions: {
     flexDirection: "row",
@@ -754,8 +754,8 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
 
-  edit: { color: "#fff", fontFamily: "JetBrains", fontWeight: "400" },
-  delete: { color: "#fff", fontFamily: "JetBrains", fontWeight: "400" },
+  edit: { color: "#fff", fontFamily: "Nippo-Medium", fontWeight: "400" },
+  delete: { color: "#fff", fontFamily: "Nippo-Medium", fontWeight: "400" },
 
   emptyState: {
     alignItems: "center",
@@ -765,20 +765,20 @@ const styles = StyleSheet.create({
   },
 
   emptyText: {
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     color: "#777",
     textAlign: "center",
     marginTop: 24,
   },
 
   errorText: {
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     color: "#e74c3c",
     textAlign: "center",
   },
 
   retryBtn: {
-    backgroundColor: "#fcc01e",
+    backgroundColor: "#f1e5ac",
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -799,14 +799,14 @@ const styles = StyleSheet.create({
   },
 
   toastText: {
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     color: "#fff",
     fontWeight: "400",
   },
 
   toastDismiss: {
-    fontFamily: "JetBrains",
-    color: "#fcc01e",
+    fontFamily: "Nippo-Medium",
+    color: "#f1e5ac",
     fontWeight: "400",
   },
 
@@ -829,14 +829,14 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     fontSize: 18,
     fontWeight: "400",
     marginBottom: 20,
   },
 
   input: {
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
@@ -845,7 +845,7 @@ const styles = StyleSheet.create({
   },
 
   modeTitle: {
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     fontSize: 14,
     fontWeight: "400",
     marginBottom: 8,
@@ -880,7 +880,7 @@ const styles = StyleSheet.create({
   },
 
   modeKeyText: {
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     fontSize: 12,
     fontWeight: "400",
   },
@@ -890,7 +890,7 @@ const styles = StyleSheet.create({
   },
 
   modeLabel: {
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     fontSize: 11,
     marginBottom: 4,
   },
@@ -906,7 +906,7 @@ const styles = StyleSheet.create({
   },
 
   saveBtn: {
-    backgroundColor: "#fcc01e",
+    backgroundColor: "#f1e5ac",
     borderRadius: 8,
     alignItems: "center",
     paddingHorizontal: 16,
@@ -931,15 +931,15 @@ const styles = StyleSheet.create({
   },
 
   confirmTitle: {
-    fontFamily: "JetBrains",
-    color: "#000",
+    fontFamily: "Nippo-Medium",
+    color: "#231512",
     fontSize: 18,
     fontWeight: "400",
     marginBottom: 8,
   },
 
   confirmText: {
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     color: "#555",
     fontSize: 14,
     lineHeight: 20,
@@ -961,7 +961,7 @@ const styles = StyleSheet.create({
   },
 
   cancelDeleteText: {
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     color: "#333",
     fontWeight: "400",
   },
@@ -974,7 +974,7 @@ const styles = StyleSheet.create({
   },
 
   confirmDeleteText: {
-    fontFamily: "JetBrains",
+    fontFamily: "Nippo-Medium",
     color: "#fff",
     fontWeight: "400",
   },

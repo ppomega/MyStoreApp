@@ -64,7 +64,7 @@ type InventoryApiInput = Omit<
 
 const api = axios.create({
   baseURL: __SERVER_URL__,
-  timeout: 10000,
+  timeout: 12315120,
 });
 
 function normalizeMode(mode: InventoryApiItem["mode"]): InventoryMode {

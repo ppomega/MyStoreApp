@@ -15,7 +15,7 @@ import { ThemeProvider, useAppTheme } from "./theme/ThemeContext";
 const Stack = createNativeStackNavigator();
 
 const defaultTextProps = {
-  style: [{ fontFamily: "JetBrains" }],
+  style: [{ fontFamily: "Nippo-Medium" }],
 };
 
 (Text as any).defaultProps = {
@@ -25,7 +25,7 @@ const defaultTextProps = {
 
 (TextInput as any).defaultProps = {
   ...((TextInput as any).defaultProps || {}),
-  style: [{ fontFamily: "JetBrains" }],
+  style: [{ fontFamily: "Nippo-Medium" }],
 };
 
 function AppShell() {

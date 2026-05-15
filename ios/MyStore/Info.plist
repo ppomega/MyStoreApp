@@ -56,8 +56,13 @@
 	<false/>
 	<key>UIAppFonts</key>
 	<array>
+		<string>Nippo-Bold.otf</string>
+		<string>Nippo-Extralight.otf</string>
+		<string>Nippo-Light.otf</string>
+		<string>Nippo-Medium.otf</string>
+		<string>Nippo-Regular.otf</string>
 		<string>AntDesign.ttf</string>
-		<string>JetBrains.ttf</string>
+		<string>Nippo-Medium.ttf</string>
 		<string>Entypo.ttf</string>
 		<string>EvilIcons.ttf</string>
 		<string>Feather.ttf</string>
@@ -67,15 +72,21 @@
 		<string>FontAwesome5_Solid.ttf</string>
 		<string>FontAwesome6_Brands.ttf</string>
 		<string>FontAwesome6_Regular.ttf</string>
+		<string>Nippo-Variable.ttf</string>
 		<string>FontAwesome6_Solid.ttf</string>
 		<string>Fontisto.ttf</string>
+		<string>Nippo-Bold.ttf</string>
 		<string>Foundation.ttf</string>
 		<string>Ionicons.ttf</string>
+		<string>Nippo-Extralight.ttf</string>
+		<string>Nippo-Light.ttf</string>
 		<string>MaterialCommunityIcons.ttf</string>
 		<string>MaterialIcons.ttf</string>
+		<string>Nippo-Medium.ttf</string>
 		<string>Octicons.ttf</string>
 		<string>SimpleLineIcons.ttf</string>
 		<string>Zocial.ttf</string>
+		<string>Nippo-Regular.ttf</string>
 	</array>
 </dict>
 </plist>
