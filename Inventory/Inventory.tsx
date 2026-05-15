@@ -717,8 +717,8 @@ const styles = StyleSheet.create({
   },
 
   name: { fontFamily: "Nippo-Medium", fontWeight: "400", fontSize: 15, lineHeight: 20 },
-  category: { fontFamily: "Nippo-Medium", fontSize: 11, color: "#888", marginTop: 4 },
-  mode: { fontFamily: "Nippo-Medium", fontSize: 11, color: "#555", lineHeight: 16, marginTop: 12 },
+  category: { fontFamily: "Nippo-Light", fontSize: 11, color: "#888", marginTop: 4 },
+  mode: { fontFamily: "Nippo-Light", fontSize: 11, color: "#555", lineHeight: 16, marginTop: 12 },
 
   details: {
     gap: 10,
@@ -726,7 +726,7 @@ const styles = StyleSheet.create({
   },
 
   priceLabel: {
-    fontFamily: "Nippo-Medium",
+    fontFamily: "Nippo-Light",
     color: "#999",
     fontSize: 10,
     marginBottom: 2,
@@ -899,7 +899,7 @@ const styles = StyleSheet.create({
   },
 
   modeLabel: {
-    fontFamily: "Nippo-Medium",
+    fontFamily: "Nippo-Light",
     fontSize: 11,
     marginBottom: 4,
   },
@@ -948,7 +948,7 @@ const styles = StyleSheet.create({
   },
 
   confirmText: {
-    fontFamily: "Nippo-Medium",
+    fontFamily: "Nippo-Light",
     color: "#555",
     fontSize: 14,
     lineHeight: 20,

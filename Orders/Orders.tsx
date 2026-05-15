@@ -1026,7 +1026,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   historyText: {
-    fontFamily: "Nippo-Medium",
+    fontFamily: "Nippo-Light",
     fontSize: 13,
     lineHeight: 20,
     marginTop: 8,
@@ -1136,7 +1136,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "400",
   },
-  selectorLabel: { color: "#999", fontFamily: "Nippo-Medium", fontSize: 11, marginBottom: 3 },
+  selectorLabel: { color: "#999", fontFamily: "Nippo-Light", fontSize: 11, marginBottom: 3 },
   selectorValue: { color: "#000", fontFamily: "Nippo-Medium", fontWeight: "400", maxWidth: 240 },
   modeRow: {
     flexDirection: "row",
@@ -1157,7 +1157,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   modeDisplayLabel: {
-    fontFamily: "Nippo-Medium",
+    fontFamily: "Nippo-Light",
     fontSize: 11,
     marginBottom: 3,
   },
@@ -1217,7 +1217,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 14,
   },
-  previewLabel: { color: "#777", fontFamily: "Nippo-Medium", fontWeight: "400" },
+  previewLabel: { color: "#777", fontFamily: "Nippo-Light", fontWeight: "400" },
   previewTotal: { color: "#27ae60", fontFamily: "Nippo-Medium", fontWeight: "400" },
   addLineBtn: {
     backgroundColor: "#040201",
@@ -1249,7 +1249,7 @@ const styles = StyleSheet.create({
   },
   lineInfo: { flex: 1, paddingRight: 10 },
   lineName: { color: "#000", fontFamily: "Nippo-Medium", fontWeight: "400" },
-  lineMeta: { color: "#777", fontFamily: "Nippo-Medium", fontSize: 12, marginTop: 4 },
+  lineMeta: { color: "#777", fontFamily: "Nippo-Light", fontSize: 12, marginTop: 4 },
   lineRight: { alignItems: "flex-end" },
   lineTotal: { color: "#000", fontFamily: "Nippo-Medium", fontWeight: "400" },
   editLine: { color: "#8a6200", fontFamily: "Nippo-Medium", fontSize: 12 },
@@ -1346,7 +1346,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   pickerItemName: { color: "#000", fontFamily: "Nippo-Medium", fontWeight: "400" },
-  pickerItemCategory: { color: "#888", fontFamily: "Nippo-Medium", fontSize: 12, marginTop: 3 },
+  pickerItemCategory: { color: "#888", fontFamily: "Nippo-Light", fontSize: 12, marginTop: 3 },
   pickerItemPrice: { color: "#27ae60", fontFamily: "Nippo-Medium", fontWeight: "400" },
   slipModal: {
     borderTopLeftRadius: 12,
@@ -1360,7 +1360,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   slipMeta: {
-    fontFamily: "Nippo-Medium",
+    fontFamily: "Nippo-Light",
     fontSize: 12,
     marginTop: 4,
   },
@@ -1378,7 +1378,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   slipLabel: {
-    fontFamily: "Nippo-Medium",
+    fontFamily: "Nippo-Light",
     fontSize: 11,
     marginBottom: 4,
   },

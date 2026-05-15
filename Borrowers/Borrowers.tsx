@@ -1084,9 +1084,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   name: { fontFamily: 'Nippo-Medium', fontSize: 16, fontWeight: '400' },
-  meta: { fontFamily: 'Nippo-Medium', fontSize: 12, marginTop: 4 },
+  meta: { fontFamily: 'Nippo-Light', fontSize: 12, marginTop: 4 },
   amountRow: { flexDirection: 'row', gap: 34, marginTop: 14 },
-  label: { fontFamily: 'Nippo-Medium', fontSize: 11, marginBottom: 3 },
+  label: { fontFamily: 'Nippo-Light', fontSize: 11, marginBottom: 3 },
   amount: { color: '#e74c3c', fontFamily: 'Nippo-Medium', fontWeight: '400' },
   cardActions: {
     borderTopWidth: 1,

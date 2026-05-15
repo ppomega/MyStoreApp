@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   subtitle: {
-    fontFamily: "Nippo-Medium",
+    fontFamily: "Nippo-Light",
     fontSize: 12,
     marginTop: 4,
   },
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
     width: 32,
   },
   statLabel: {
-    fontFamily: "Nippo-Medium",
+    fontFamily: "Nippo-Light",
     fontSize: 11,
   },
   statValue: {
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   statDetail: {
-    fontFamily: "Nippo-Medium",
+    fontFamily: "Nippo-Light",
     fontSize: 11,
     marginTop: 7,
   },
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   muted: {
-    fontFamily: "Nippo-Medium",
+    fontFamily: "Nippo-Light",
     fontSize: 12,
     lineHeight: 18,
   },
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
   },
   metricLabel: {
-    fontFamily: "Nippo-Medium",
+    fontFamily: "Nippo-Light",
     fontSize: 12,
   },
   metricValue: {
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   },
   insightText: {
     flex: 1,
-    fontFamily: "Nippo-Medium",
+    fontFamily: "Nippo-Light",
     fontSize: 12,
     lineHeight: 18,
   },

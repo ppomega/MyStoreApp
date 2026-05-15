@@ -20,6 +20,7 @@ type AppTheme = {
     overlay: string;
   };
   fonts: {
+    light: string;
     regular: string;
   };
   toggleTheme: () => void;
@@ -31,7 +32,7 @@ const palettes = {
     surface: "#f1e5ac",
     surfaceMuted: "#f1e5ac",
     text: "#231512",
-    textMuted: "#777",
+    textMuted: "#4f4038",
     border: "#9a9999",
     nav: "#f3eccd",
     navActive: "#231512",
@@ -68,6 +69,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       name,
       colors: palettes[name],
       fonts: {
+        light: "Nippo-Light",
         regular: "Nippo-Medium",
       },
       toggleTheme: () =>
