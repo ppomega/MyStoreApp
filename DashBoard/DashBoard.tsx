@@ -29,6 +29,7 @@ import {
 } from "../services/tenantPaymentApi";
 import { getTenantRents, type TenantRent } from "../services/tenantRentApi";
 import { useAppTheme } from "../theme/ThemeContext";
+import EntypoIcon from "react-native-vector-icons/Entypo";
 
 type DashboardData = {
   borrowers: Borrower[];
@@ -238,6 +239,7 @@ export function DashBoard() {
         <>
           <View style={styles.statGrid}>
             <StatCard
+              family="Entypo"
               icon="archive"
               label="Inventory"
               value={`${data.inventory.length}`}
@@ -330,18 +332,22 @@ export function DashBoard() {
     icon,
     label,
     value,
+    family = "FontAwesome",
   }: {
     detail: string;
+    family?: "FontAwesome" | "Entypo";
     icon: string;
     label: string;
     value: string;
   }) {
+    const StatIcon = family === "Entypo" ? EntypoIcon : Icon;
+
     return (
       <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
         <View
           style={[styles.statIcon, { backgroundColor: colors.surfaceMuted }]}
         >
-          <Icon name={icon} size={15} color={colors.accent} />
+          <StatIcon name={icon} size={15} color={colors.accent} />
         </View>
         <Text style={[styles.statLabel, { color: colors.textMuted }]}>
           {label}

@@ -26,7 +26,7 @@ const TABS: Tab[] = [
   { label: "Main",      route: "Main",      icon: "home",              iconFamily: "Entypo"        },
   { label: "Orders",    route: "Orders",    icon: "shopping-cart",     iconFamily: "FontAwesome"   },
   { label: "Inventory", route: "Inventory", icon: "archive",         iconFamily: "Entypo" },
-  { label: "Tenants",   route: "Tenants",   icon: "people-circle",     iconFamily: "Ionicons"      },
+  { label: "Tenants",   route: "Tenants",   icon: "building",          iconFamily: "FontAwesome"   },
   { label: "Borrowers", route: "Borrowers", icon: "credit-card-alt",       iconFamily: "FontAwesome"       },
 ];
 
@@ -78,19 +78,19 @@ export default function Nav() {
           top: 12,
           backgroundColor: colors.surface,
           borderColor: colors.border,
-          borderRadius: 22,
+          borderRadius: 20,
           borderWidth: 1,
           alignItems: "center",
           justifyContent: "center",
-          height: 44,
-          width: 44,
+          height: 40,
+          width: 40,
           zIndex: 20,
         }}
       >
         <ThemeIcon
           name={name === "dark" ? "sun-o" : "moon-o"}
           size={19}
-          color={colors.accent}
+          color={name === "dark" ? colors.accent : colors.text}
         />
       </TouchableOpacity>
 
