@@ -2,22 +2,64 @@ import React, { useState } from "react";
 import { View, TouchableOpacity, Text } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
-import Icon from "react-native-vector-icons/Entypo";
+// Mixed icon sources
+import EntypoIcon from "react-native-vector-icons/Entypo";
+import FontAwesomeIcon from "react-native-vector-icons/FontAwesome";
+import MaterialIcon from "react-native-vector-icons/MaterialIcons";
+import IoniconIcon from "react-native-vector-icons/Ionicons";
+import FeatherIcon from "react-native-vector-icons/Feather";
 import ThemeIcon from "react-native-vector-icons/FontAwesome";
+
 import { useAppTheme } from "../theme/ThemeContext";
 
-const TABS = [
-  { label: "Main", route: "Main", icon: "home" },
-  { label: "Orders", route: "Orders", icon: "shopping-cart" },
-  { label: "Inventory", route: "Inventory", icon: "box" },
-  { label: "Tenants", route: "Tenants", icon: "users" },
-  { label: "Borrowers", route: "Borrowers", icon: "wallet" },
+// Each tab declares which icon library to use
+type IconFamily = "Entypo" | "FontAwesome" | "MaterialIcons" | "Ionicons" | "Feather"|"Lucide";
+
+interface Tab {
+  label: string;
+  route: string;
+  icon: string;
+  iconFamily: IconFamily;
+}
+
+const TABS: Tab[] = [
+  { label: "Main",      route: "Main",      icon: "home",              iconFamily: "Entypo"        },
+  { label: "Orders",    route: "Orders",    icon: "shopping-cart",     iconFamily: "FontAwesome"   },
+  { label: "Inventory", route: "Inventory", icon: "archive",         iconFamily: "Entypo" },
+  { label: "Tenants",   route: "Tenants",   icon: "people-circle",     iconFamily: "Ionicons"      },
+  { label: "Borrowers", route: "Borrowers", icon: "credit-card-alt",       iconFamily: "FontAwesome"       },
 ];
+
+interface TabIconProps {
+  family: IconFamily;
+  name: string;
+  size: number;
+  color: string;
+}
+
+/** Renders the correct icon component based on the icon family string */
+function TabIcon({ family, name, size, color }: TabIconProps) {
+  switch (family) {
+    case "Entypo":
+      return <EntypoIcon name={name} size={size} color={color} />;
+    case "FontAwesome":
+      return <FontAwesomeIcon name={name} size={size} color={color} />;
+    case "MaterialIcons":
+      return <MaterialIcon name={name} size={size} color={color} />;
+    case "Ionicons":
+      return <IoniconIcon name={name} size={size} color={color} />;
+    case "Feather":
+      return <FeatherIcon name={name} size={size} color={color} />;
+    default:
+      return <EntypoIcon name={name} size={size} color={color} />;
+  }
+}
 
 export default function Nav() {
   const navigation = useNavigation();
   const [activeIndex, setActiveIndex] = useState(0);
   const { colors, name, toggleTheme } = useAppTheme();
+
   const handlePress = (index: number, route: string) => {
     setActiveIndex(index);
     navigation.navigate(route as never);
@@ -25,6 +67,7 @@ export default function Nav() {
 
   return (
     <>
+      {/* Theme toggle button */}
       <TouchableOpacity
         accessibilityLabel="Toggle theme"
         accessibilityRole="button"
@@ -50,77 +93,72 @@ export default function Nav() {
           color={colors.accent}
         />
       </TouchableOpacity>
+
+      {/* Bottom navigation bar */}
       <View
         style={{
           flexDirection: "row",
           height: 60,
           position: "absolute",
-          left: 12,
-          right: 12,
           bottom: 58,
           flex: 1,
-          width: "auto",
+          width: "100%",
           backgroundColor: colors.nav,
-          borderColor: colors.border,
-        //   borderWidth: 0.3,
-          borderRadius: 8,
-          
+          // borderColor: colors.border,
+          // borderRadius: 8,
+          // borderWidth: 1,
         }}
       >
-        {/* <View
-          style={[
-            {
-              position: "absolute",
-              width: width / (TABS.length+1),
-              bottom: 0,
-              height: "100%",
-              backgroundColor: "#231512",
-              borderRadius: 12,
-            },
-          ]}
-        /> */}
-
         {TABS.map((tab, index) => {
           const isActive = activeIndex === index;
-          const activeTextColor = name === "dark" ? "#110702" : "#fff";
-
+          const activeTextColor = name != "dark" ? "#f1e5ac" : "#231512";
+          const inactiveIconColor =
+name === "dark" ? "#f1e5ac" : "#231512";
           return (
-            <View key={tab.route} style={{ flex: 1, 
-                 position: "relative",
+            <View
+              key={tab.route}
+              style={{
+                flex: 1,
+                position: "relative",
                 top: 0,
                 width: `${100 / TABS.length}%`,
                 height: "100%",
                 backgroundColor: isActive ? colors.navActive : "transparent",
-                borderRadius:isActive ? 6 : 0,
-             }}>
-            <TouchableOpacity
-              key={tab.route}
-              onPress={() => handlePress(index, tab.route)}
-              style={{
-                flex: 1,
-               borderRadius: 6,
-                alignItems: "center",
+                borderRadius: isActive ? 6 : 0,
               }}
             >
-              <Icon
-                name={tab.icon}
-                size={24}
-                color={isActive && name === "dark" ? "#110702" : "#f1e5ac"}
-                style={{ position: "relative", top: 6 }}
-              />
-              <Text
-                numberOfLines={1}
-                adjustsFontSizeToFit
+              <TouchableOpacity
+                onPress={() => handlePress(index, tab.route)}
                 style={{
-                  fontFamily: "Nippo-Medium",
-                  fontSize: 13,
-                  paddingTop: 5,
-                  color: isActive ? activeTextColor : colors.text,
+                  flex: 1,
+                  borderRadius: 6,
+                  alignItems: "center",
                 }}
               >
-                {tab.label}
-              </Text>
-            </TouchableOpacity></View>
+                {/* Icon rendered from its own library */}
+                <View style={{ position: "relative", top: 6 }}>
+                  <TabIcon
+                    family={tab.iconFamily}
+                    name={tab.icon}
+                    size={24}
+                    color={isActive ? activeTextColor : inactiveIconColor}
+                  />
+                </View>
+
+                <Text
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  style={{
+                    fontFamily: "Nippo-Medium",
+                    fontSize: 12,
+                    paddingTop: 5,
+                    color: isActive ? activeTextColor : colors.text,
+                  }}
+                >
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            </View>
           );
         })}
       </View>

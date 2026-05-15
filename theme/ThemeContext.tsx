@@ -27,13 +27,13 @@ type AppTheme = {
 
 const palettes = {
   light: {
-    background: "#f1e5ac",
+    background: "#f3eccd",
     surface: "#f1e5ac",
     surfaceMuted: "#f1e5ac",
     text: "#231512",
     textMuted: "#777",
-    border: "#ddd",
-    nav: "#f1e5ac",
+    border: "#9a9999",
+    nav: "#f3eccd",
     navActive: "#231512",
     accent: "#f1e5ac",
     danger: "#c0392b",

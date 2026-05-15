@@ -515,7 +515,7 @@ export default function Orders() {
                 color:
                   activeView === "new"
                     ? colors.navActive === colors.accent
-                      ? "#231512"
+                      ? "#000"
                       : "#fff"
                     : colors.text,
               },
@@ -539,7 +539,7 @@ export default function Orders() {
                 color:
                   activeView === "history"
                     ? colors.navActive === colors.accent
-                      ? "#231512"
+                      ? "#000"
                       : "#fff"
                     : colors.text,
               },
@@ -553,7 +553,7 @@ export default function Orders() {
       {activeView === "history" ? (
         <ScrollView contentContainerStyle={styles.content}>
           {historyLoading ? (
-            <ActivityIndicator color="#f1e5ac" style={{ marginTop: 24 }} />
+            <ActivityIndicator color="#fcc01e" style={{ marginTop: 24 }} />
           ) : historyError ? (
             <View style={styles.emptyState}>
               <Text style={styles.errorText}>{historyError}</Text>
@@ -602,7 +602,7 @@ export default function Orders() {
                           {
                             color: isCompleteStatus(order.status)
                               ? "#fff"
-                              : "#231512",
+                              : "#000",
                           },
                         ]}
                       >
@@ -682,7 +682,7 @@ export default function Orders() {
           )}
         </ScrollView>
       ) : loading ? (
-        <ActivityIndicator color="#f1e5ac" style={{ marginTop: 24 }} />
+        <ActivityIndicator color="#fcc01e" style={{ marginTop: 24 }} />
       ) : error ? (
         <View style={styles.emptyState}>
           <Text style={styles.errorText}>{error}</Text>
@@ -746,7 +746,7 @@ export default function Orders() {
                       {
                         color:
                           orderType === type && colors.navActive === colors.accent
-                            ? "#231512"
+                            ? "#000"
                             : orderType === type
                             ? colors.accent
                             : colors.text,
@@ -799,7 +799,7 @@ export default function Orders() {
                           color:
                             selectedOrderMode === modeName &&
                             colors.navActive === colors.accent
-                              ? "#231512"
+                              ? "#000"
                               : colors.text,
                         },
                       ]}
@@ -986,7 +986,7 @@ export default function Orders() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f6fa", padding: 12 },
   title: {
-    color: "#231512",
+    color: "#000",
     fontFamily: "Nippo-Medium",
     fontSize: 24,
     fontWeight: "400",
@@ -1069,7 +1069,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#27ae60",
   },
   statusPending: {
-    backgroundColor: "#f1e5ac",
+    backgroundColor: "#fcc01e",
   },
   statusText: {
     fontFamily: "Nippo-Medium",
@@ -1135,7 +1135,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   selectorLabel: { color: "#999", fontFamily: "Nippo-Medium", fontSize: 11, marginBottom: 3 },
-  selectorValue: { color: "#231512", fontFamily: "Nippo-Medium", fontWeight: "400", maxWidth: 240 },
+  selectorValue: { color: "#000", fontFamily: "Nippo-Medium", fontWeight: "400", maxWidth: 240 },
   modeRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1179,7 +1179,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   modeChipTextActive: {
-    color: "#f1e5ac",
+    color: "#fcc01e",
   },
   quantityRow: {
     flexDirection: "row",
@@ -1218,13 +1218,13 @@ const styles = StyleSheet.create({
   previewLabel: { color: "#777", fontFamily: "Nippo-Medium", fontWeight: "400" },
   previewTotal: { color: "#27ae60", fontFamily: "Nippo-Medium", fontWeight: "400" },
   addLineBtn: {
-    backgroundColor: "#f1e5ac",
+    backgroundColor: "#fcc01e",
     borderRadius: 8,
     alignItems: "center",
     paddingVertical: 12,
     marginTop: 14,
   },
-  addLineText: { color: "#231512", fontFamily: "Nippo-Medium", fontWeight: "400" },
+  addLineText: { color: "#000", fontFamily: "Nippo-Medium", fontWeight: "400" },
   summary: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -1232,7 +1232,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   sectionTitle: {
-    color: "#231512",
+    color: "#000",
     fontFamily: "Nippo-Medium",
     fontSize: 16,
     fontWeight: "400",
@@ -1246,10 +1246,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   lineInfo: { flex: 1, paddingRight: 10 },
-  lineName: { color: "#231512", fontFamily: "Nippo-Medium", fontWeight: "400" },
+  lineName: { color: "#000", fontFamily: "Nippo-Medium", fontWeight: "400" },
   lineMeta: { color: "#777", fontFamily: "Nippo-Medium", fontSize: 12, marginTop: 4 },
   lineRight: { alignItems: "flex-end" },
-  lineTotal: { color: "#231512", fontFamily: "Nippo-Medium", fontWeight: "400" },
+  lineTotal: { color: "#000", fontFamily: "Nippo-Medium", fontWeight: "400" },
   editLine: { color: "#8a6200", fontFamily: "Nippo-Medium", fontSize: 12 },
   historyActionEdit: { color: "#8a6200", fontFamily: "Nippo-Medium", fontSize: 12 },
   historyActionSlip: { color: "#1877f2", fontFamily: "Nippo-Medium", fontSize: 12 },
@@ -1262,7 +1262,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 14,
   },
-  totalLabel: { color: "#231512", fontFamily: "Nippo-Medium", fontSize: 16, fontWeight: "400" },
+  totalLabel: { color: "#000", fontFamily: "Nippo-Medium", fontSize: 16, fontWeight: "400" },
   totalValue: { color: "#27ae60", fontFamily: "Nippo-Medium", fontSize: 18, fontWeight: "400" },
   completeBtn: {
     backgroundColor: "#111",
@@ -1281,12 +1281,12 @@ const styles = StyleSheet.create({
   },
   errorText: { color: "#e74c3c", fontFamily: "Nippo-Medium", textAlign: "center" },
   retryBtn: {
-    backgroundColor: "#f1e5ac",
+    backgroundColor: "#fcc01e",
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
-  retryText: { color: "#231512", fontFamily: "Nippo-Medium", fontWeight: "400" },
+  retryText: { color: "#000", fontFamily: "Nippo-Medium", fontWeight: "400" },
   toast: {
     position: "absolute",
     left: 12,
@@ -1301,7 +1301,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   toastText: { color: "#fff", fontFamily: "Nippo-Medium", fontWeight: "400" },
-  toastDismiss: { color: "#f1e5ac", fontFamily: "Nippo-Medium", fontWeight: "400" },
+  toastDismiss: { color: "#fcc01e", fontFamily: "Nippo-Medium", fontWeight: "400" },
   pickerOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -1320,7 +1320,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
-  pickerTitle: { color: "#231512", fontFamily: "Nippo-Medium", fontSize: 18, fontWeight: "400" },
+  pickerTitle: { color: "#000", fontFamily: "Nippo-Medium", fontSize: 18, fontWeight: "400" },
   closePicker: { color: "#8a6200", fontFamily: "Nippo-Medium", fontWeight: "400" },
   searchIcon: {
     position: "absolute",
@@ -1343,7 +1343,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 12,
   },
-  pickerItemName: { color: "#231512", fontFamily: "Nippo-Medium", fontWeight: "400" },
+  pickerItemName: { color: "#000", fontFamily: "Nippo-Medium", fontWeight: "400" },
   pickerItemCategory: { color: "#888", fontFamily: "Nippo-Medium", fontSize: 12, marginTop: 3 },
   pickerItemPrice: { color: "#27ae60", fontFamily: "Nippo-Medium", fontWeight: "400" },
   slipModal: {
