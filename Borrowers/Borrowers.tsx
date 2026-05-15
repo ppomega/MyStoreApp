@@ -457,7 +457,7 @@ export default function BorrowersScreen() {
                 {
                   color:
                     activeTab === tab
-                      ? colors.navActive === colors.accent ? '#231512' : '#fff'
+                     ? colors.nav
                       : colors.text,
                 },
               ]}
@@ -484,8 +484,8 @@ export default function BorrowersScreen() {
             />
           </View>
 
-          <TouchableOpacity style={styles.addBtn} onPress={openCreateBorrower}>
-            <Text style={styles.addText}>+ Add Borrower</Text>
+          <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.navActive }]} onPress={openCreateBorrower}>
+            <Text style={[styles.addText, { color: colors.nav }]}>+ Add Borrower</Text>
           </TouchableOpacity>
 
           {borrowersLoading ? (
@@ -534,7 +534,7 @@ export default function BorrowersScreen() {
                     {
                       color:
                         debtActiveView === sub
-                          ? colors.navActive === colors.accent ? '#231512' : '#fff'
+                         ? colors.nav
                           : colors.text,
                     },
                   ]}
@@ -665,11 +665,11 @@ export default function BorrowersScreen() {
 
                 {/* Save */}
                 <TouchableOpacity
-                  style={[styles.saveBtn, debtSaving && styles.disabledBtn]}
+                  style={[styles.saveBtn,{backgroundColor: colors.navActive}, debtSaving && styles.disabledBtn]}
                   onPress={handleSaveDebt}
                   disabled={debtSaving}
                 >
-                  <Text style={styles.saveBtnText}>
+                  <Text style={[styles.saveBtnText, { color: colors.nav }]}>
                     {debtSaving ? 'Saving...' : editingDebt ? 'Update Debt' : 'Record Debt'}
                   </Text>
                 </TouchableOpacity>
@@ -831,11 +831,11 @@ export default function BorrowersScreen() {
 
                 {/* Save */}
                 <TouchableOpacity
-                  style={[styles.saveBtn, paymentSaving && styles.disabledBtn]}
+                  style={[styles.saveBtn,{backgroundColor: colors.navActive}, paymentSaving && styles.disabledBtn]}
                   onPress={handleSavePayment}
                   disabled={paymentSaving}
                 >
-                  <Text style={styles.saveBtnText}>
+                  <Text style={[styles.saveBtnText, { color: colors.nav }]}>
                     {paymentSaving ? 'Saving...' : editingPayment ? 'Update Payment' : 'Record Payment'}
                   </Text>
                 </TouchableOpacity>

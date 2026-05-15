@@ -846,8 +846,10 @@ export default function Orders() {
               <Text style={styles.previewTotal}>Rs {previewTotal}</Text>
             </View>
 
-            <TouchableOpacity style={styles.addLineBtn} onPress={addLine}>
-              <Text style={styles.addLineText}>Add to Order</Text>
+            <TouchableOpacity style={[styles.addLineBtn, { backgroundColor: colors.navActive }]} onPress={addLine}>
+              <Text style={[styles.addLineText, { color: colors.nav }]}>
+                Add to Order
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -1218,13 +1220,13 @@ const styles = StyleSheet.create({
   previewLabel: { color: "#777", fontFamily: "Nippo-Medium", fontWeight: "400" },
   previewTotal: { color: "#27ae60", fontFamily: "Nippo-Medium", fontWeight: "400" },
   addLineBtn: {
-    backgroundColor: "#fcc01e",
+    backgroundColor: "#040201",
     borderRadius: 8,
     alignItems: "center",
     paddingVertical: 12,
     marginTop: 14,
   },
-  addLineText: { color: "#000", fontFamily: "Nippo-Medium", fontWeight: "400" },
+  addLineText: { color:  "#f1e5ac", fontFamily: "Nippo-Medium", fontWeight: "400" },
   summary: {
     backgroundColor: "#fff",
     borderRadius: 12,

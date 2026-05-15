@@ -526,6 +526,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
             <View style={styles.formRow}>
               <TextInput
                 placeholder="Room rent"
+                editable={false}
                 placeholderTextColor="#999"
                 value={rentRoomRent}
                 onChangeText={setRentRoomRent}
@@ -568,7 +569,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                         rentStatus === status
                           ? colors.navActive
                           : colors.surfaceMuted,
-                    },
+ },
                   ]}
                   onPress={() => setRentStatus(status)}
                 >
@@ -577,9 +578,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                       styles.statusBtnText,
                       {
                         color:
-                          rentStatus === status &&
-                          colors.navActive === colors.accent
-                            ? '#231512'
+                          rentStatus === status? colors.nav
                             : colors.text,
                       },
                     ]}
@@ -609,11 +608,11 @@ const [selectedDate, setSelectedDate] = useState(new Date());
         )}
 
         <TouchableOpacity
-          style={[styles.saveBtn, saving && styles.disabledBtn]}
+          style={[styles.saveBtn,{backgroundColor: colors.navActive}, saving && styles.disabledBtn]}
           onPress={saveRecord}
           disabled={saving}
         >
-          <Text style={styles.saveText}>
+          <Text style={[styles.saveText, { color: colors.nav }]}>
             {saving
               ? 'Saving...'
               : editingRent || editingPayment
@@ -752,8 +751,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                 styles.subSwitchText,
                 {
                   color:
-                    recordView === view && colors.navActive === colors.accent
-                      ? '#231512'
+                    recordView === view ? colors.nav 
                       : colors.text,
                 },
               ]}
@@ -801,8 +799,8 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                 styles.viewSwitchText,
                 {
                   color:
-                    activeTab === tab && colors.navActive === colors.accent
-                      ? '#231512'
+                    activeTab === tab 
+                      ? colors.nav
                       : colors.text,
                 },
               ]}
