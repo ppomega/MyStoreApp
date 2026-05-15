@@ -5,7 +5,10 @@ export type TenantRent = {
   tenant: string;
   month: Date;
   roomRent: number;
+  beforeUnits: number;
+  afterUnits: number;
   units: number;
+  totalRent: number;
   status: 'Paid' | 'Pending';
   createdAt: string;
   updatedAt: string;
@@ -23,7 +26,10 @@ type TenantRentApiItem = {
   tenant?: TenantRef;
   month?: Date | string;
   roomRent?: number | string;
+  beforeUnits?: number | string;
+  afterUnits?: number | string;
   units?: number | string;
+  totalRent?: number | string;
   status?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -56,12 +62,21 @@ function extractTenantName(tenant: TenantRef | undefined): string {
 }
 
 function normalizeTenantRent(rent: TenantRentApiItem): TenantRent {
+  const beforeUnits = toNumber(rent.beforeUnits);
+  const afterUnits = toNumber(rent.afterUnits);
+  const units =
+    rent.units === undefined ? Math.max(afterUnits - beforeUnits, 0) : toNumber(rent.units);
+  const roomRent = toNumber(rent.roomRent);
+
   return {
     id: rent._id || '',
     tenant: extractTenantName(rent.tenant),
     month: rent.month ? new Date(rent.month) : new Date(),
-    roomRent: toNumber(rent.roomRent),
-    units: toNumber(rent.units),
+    roomRent,
+    beforeUnits,
+    afterUnits,
+    units,
+    totalRent: rent.totalRent === undefined ? roomRent + units * 8 : toNumber(rent.totalRent),
     status: rent.status === 'Paid' ? 'Paid' : 'Pending',
     createdAt: rent.createdAt || '',
     updatedAt: rent.updatedAt || '',
@@ -83,7 +98,10 @@ function serializeTenantRentForApi(rent: TenantRentInput) {
     tenant: rent.tenant,
     month: rent.month,
     roomRent: rent.roomRent,
+    beforeUnits: rent.beforeUnits,
+    afterUnits: rent.afterUnits,
     units: rent.units,
+    totalRent: rent.totalRent,
     status: rent.status,
   };
 }

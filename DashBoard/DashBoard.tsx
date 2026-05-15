@@ -150,10 +150,10 @@ export function DashBoard() {
     );
     const pendingRent = data.tenantRents
       .filter((rent) => rent.status === "Pending")
-      .reduce((total, rent) => total + rent.roomRent, 0);
+      .reduce((total, rent) => total + rent.totalRent, 0);
     const paidRent = data.tenantRents
       .filter((rent) => rent.status === "Paid")
-      .reduce((total, rent) => total + rent.roomRent, 0);
+      .reduce((total, rent) => total + rent.totalRent, 0);
     const tenantPayments = data.tenantPayments.reduce(
       (total, payment) => total + payment.value,
       0

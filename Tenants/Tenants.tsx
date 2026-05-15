@@ -40,6 +40,12 @@ import {
   TenantRentInput,
   updateTenantRent,
 } from '../services/tenantRentApi';
+import {
+  getTenantRentSlipDownloadUrl,
+  getTenantRentSlipFileName,
+  getTenantRentSlipUrl,
+} from '../services/tenantRentSlipApi';
+import { downloadAndOpenPdf } from '../services/pdfDownloadApi';
 import { useAppTheme } from '../theme/ThemeContext';
 
 type TenantForm = Omit<
@@ -105,6 +111,26 @@ function getTenantName(tenant: any) {
   return tenant.name || 'Unknown';
 }
 
+const UNIT_RATE = 8;
+
+function getConsumedUnits(beforeUnits: string | number, afterUnits: string | number) {
+  const before = Number(beforeUnits);
+  const after = Number(afterUnits);
+
+  if (Number.isNaN(before) || Number.isNaN(after)) {
+    return 0;
+  }
+
+  return Math.max(after - before, 0);
+}
+
+function getRentTotal(roomRent: string | number, units: string | number) {
+  const rent = Number(roomRent);
+  const consumedUnits = Number(units);
+
+  return (Number.isNaN(rent) ? 0 : rent) + (Number.isNaN(consumedUnits) ? 0 : consumedUnits) * UNIT_RATE;
+}
+
 export default function Tenants() {
   const { colors } = useAppTheme();
   const [activeTab, setActiveTab] = useState<'tenants' | 'rents' | 'payments'>(
@@ -135,12 +161,14 @@ export default function Tenants() {
   const [paymentValue, setPaymentValue] = useState('');
   const [rentMonth, setRentMonth] = useState('');
   const [rentRoomRent, setRentRoomRent] = useState('');
-  const [rentUnits, setRentUnits] = useState('');
+  const [rentBeforeUnits, setRentBeforeUnits] = useState('');
+  const [rentAfterUnits, setRentAfterUnits] = useState('');
   const [rentStatus, setRentStatus] = useState<'Paid' | 'Pending'>('Pending');
 const [showDatePicker, setShowDatePicker] = useState(false);
 const [selectedDate, setSelectedDate] = useState(new Date());
   const [form, setForm] = useState<TenantForm>(emptyForm);
   const [successMessage, setSuccessMessage] = useState('');
+  const [openingRentSlipId, setOpeningRentSlipId] = useState('');
 
   const loadTenants = async () => {
     try {
@@ -254,10 +282,29 @@ const [selectedDate, setSelectedDate] = useState(new Date());
     setPaymentValue('');
     setRentMonth('');
     setRentRoomRent('');
-    setRentUnits('');
+    setRentBeforeUnits('');
+    setRentAfterUnits('');
     setRentStatus('Pending');
     setEditingRent(null);
     setEditingPayment(null);
+  };
+
+  const getPreviousAfterUnits = (tenant: Tenant) => {
+    const tenantRents = rents
+      .filter(rent => rent.tenant === tenant.id || rent.tenant === tenant.name)
+      .sort((left, right) => right.month.getTime() - left.month.getTime());
+
+    return tenantRents[0]?.afterUnits || 0;
+  };
+
+  const selectTenantForRecord = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+
+    if (activeTab === 'rents' && !editingRent) {
+      setRentRoomRent(tenant.rent ? String(tenant.rent) : '');
+      setRentBeforeUnits(String(getPreviousAfterUnits(tenant)));
+      setRentAfterUnits('');
+    }
   };
 
   const saveRecord = async () => {
@@ -270,20 +317,29 @@ const [selectedDate, setSelectedDate] = useState(new Date());
       setSaving(true);
       if (activeTab === 'rents') {
         const roomRent = Number(rentRoomRent);
-        const units = Number(rentUnits);
+        const beforeUnits = Number(rentBeforeUnits);
+        const afterUnits = Number(rentAfterUnits);
+        const units = afterUnits - beforeUnits;
         if (!rentRoomRent || Number.isNaN(roomRent) || roomRent < 0) {
           Alert.alert('Invalid rent', 'Please enter a valid room rent.');
           return;
         }
-        if (!rentUnits || Number.isNaN(units) || units < 0) {
-          Alert.alert('Invalid units', 'Please enter valid units.');
+        if (Number.isNaN(beforeUnits) || beforeUnits < 0) {
+          Alert.alert('Invalid before units', 'Please enter valid before units.');
+          return;
+        }
+        if (!rentAfterUnits || Number.isNaN(afterUnits) || afterUnits < beforeUnits) {
+          Alert.alert('Invalid after units', 'After units must be greater than or equal to before units.');
           return;
         }
         const payload: TenantRentInput = {
           tenant: selectedTenant.id,
           month: rentMonth ? new Date(rentMonth) : new Date(),
           roomRent,
+          beforeUnits,
+          afterUnits,
           units,
+          totalRent: roomRent + units * UNIT_RATE,
           status: rentStatus,
         };
         if (editingRent) {
@@ -336,10 +392,11 @@ const [selectedDate, setSelectedDate] = useState(new Date());
     setRecordView('new');
     setEditingRent(rent);
     setEditingPayment(null);
-    setSelectedTenant(getTenantName(rent.tenant));
+    setSelectedTenant(tenants.find(tenant => tenant.id === rent.tenant || tenant.name === rent.tenant) ?? null);
     setRentMonth(rent.month ? rent.month.toISOString().slice(0, 10) : '');
     setRentRoomRent(String(rent.roomRent));
-    setRentUnits(String(rent.units));
+    setRentBeforeUnits(String(rent.beforeUnits));
+    setRentAfterUnits(String(rent.afterUnits));
     setRentStatus(rent.status);
   };
 
@@ -373,6 +430,27 @@ const [selectedDate, setSelectedDate] = useState(new Date());
       loadTenants();
     } catch {
       Alert.alert('Delete failed', 'Could not delete the rent record.');
+    }
+  };
+
+  const openTenantRentSlip = async (rent: TenantRent, download = false) => {
+    if (!rent.id) {
+      Alert.alert('Slip unavailable', 'This rent record does not have an id yet.');
+      return;
+    }
+
+    try {
+      setOpeningRentSlipId(rent.id);
+      const slipUrl = download
+        ? getTenantRentSlipDownloadUrl(rent.id)
+        : getTenantRentSlipUrl(rent.id);
+
+      await downloadAndOpenPdf(slipUrl, getTenantRentSlipFileName(rent.id));
+      setSuccessMessage(download ? 'Rent slip downloaded.' : 'Rent slip opened.');
+    } catch {
+      Alert.alert('Slip failed', 'Could not open the tenant rent slip PDF.');
+    } finally {
+      setOpeningRentSlipId('');
     }
   };
 
@@ -462,7 +540,9 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                 Editing {activeTab === 'rents' ? 'rent' : 'payment'}
               </Text>
               <Text style={[styles.name, { color: colors.text }]}>
-                Rs {activeTab === 'rents' ? rentRoomRent || 0 : paymentValue || 0}
+                Rs {activeTab === 'rents'
+                  ? getRentTotal(rentRoomRent, getConsumedUnits(rentBeforeUnits, rentAfterUnits))
+                  : paymentValue || 0}
               </Text>
             </View>
             <TouchableOpacity onPress={resetRecordForm}>
@@ -542,10 +622,10 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                 ]}
               />
               <TextInput
-                placeholder="Units"
+                placeholder="Before units"
                 placeholderTextColor="#999"
-                value={rentUnits}
-                onChangeText={setRentUnits}
+                value={rentBeforeUnits}
+                onChangeText={setRentBeforeUnits}
                 keyboardType="numeric"
                 style={[
                   styles.input,
@@ -557,6 +637,53 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                   },
                 ]}
               />
+            </View>
+            <View style={styles.formRow}>
+              <TextInput
+                placeholder="After units"
+                placeholderTextColor="#999"
+                value={rentAfterUnits}
+                onChangeText={setRentAfterUnits}
+                keyboardType="numeric"
+                style={[
+                  styles.input,
+                  styles.halfInput,
+                  {
+                    backgroundColor: colors.input,
+                    borderColor: colors.border,
+                    color: colors.text,
+                  },
+                ]}
+              />
+              <View
+                style={[
+                  styles.input,
+                  styles.halfInput,
+                  styles.calculatedField,
+                  {
+                    backgroundColor: colors.input,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Text style={[styles.label, { color: colors.textMuted }]}>
+                  Units used
+                </Text>
+                <Text style={[styles.selectorValue, { color: colors.text }]}>
+                  {getConsumedUnits(rentBeforeUnits, rentAfterUnits)}
+                </Text>
+              </View>
+            </View>
+            <View style={[styles.rentTotalPreview, { backgroundColor: colors.surfaceMuted }]}>
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                Total rent
+              </Text>
+              <Text style={styles.amount}>
+                Rs {getRentTotal(
+                  rentRoomRent,
+                  getConsumedUnits(rentBeforeUnits, rentAfterUnits),
+                )}
+              </Text>
             </View>
             <View style={styles.statusRow}>
               {(['Pending', 'Paid'] as const).map(status => (
@@ -672,26 +799,76 @@ const [selectedDate, setSelectedDate] = useState(new Date());
               )}
             </View>
             {activeTab === 'rents' ? (
-              <View style={styles.amountRow}>
-                <View>
-                  <Text style={[styles.label, { color: colors.textMuted }]}>
-                    Room rent
-                  </Text>
-                  <Text style={styles.amount}>
-                    Rs {(record as TenantRent).roomRent}
-                  </Text>
+              <>
+                <View style={styles.amountRow}>
+                  <View>
+                    <Text style={[styles.label, { color: colors.textMuted }]}>
+                      Room rent
+                    </Text>
+                    <Text style={styles.amount}>
+                      Rs {(record as TenantRent).roomRent}
+                    </Text>
+                  </View>
+                  <View>
+                    <Text style={[styles.label, { color: colors.textMuted }]}>
+                      Total rent
+                    </Text>
+                    <Text style={styles.amount}>
+                      Rs {(record as TenantRent).totalRent}
+                    </Text>
+                  </View>
                 </View>
-                <View>
-                  <Text style={[styles.label, { color: colors.textMuted }]}>
-                    Units
-                  </Text>
-                  <Text style={styles.amount}>
-                    {(record as TenantRent).units}
-                  </Text>
+                <View style={styles.amountRow}>
+                  <View>
+                    <Text style={[styles.label, { color: colors.textMuted }]}>
+                      Before units
+                    </Text>
+                    <Text style={styles.amount}>
+                      {(record as TenantRent).beforeUnits}
+                    </Text>
+                  </View>
+                  <View>
+                    <Text style={[styles.label, { color: colors.textMuted }]}>
+                      After units
+                    </Text>
+                    <Text style={styles.amount}>
+                      {(record as TenantRent).afterUnits}
+                    </Text>
+                  </View>
+                  <View>
+                    <Text style={[styles.label, { color: colors.textMuted }]}>
+                      Units used
+                    </Text>
+                    <Text style={styles.amount}>
+                      {(record as TenantRent).units}
+                    </Text>
+                  </View>
                 </View>
-              </View>
+              </>
             ) : null}
             <View style={[styles.actions, { borderTopColor: colors.border }]}>
+              {activeTab === 'rents' ? (
+                <>
+                  <TouchableOpacity
+                    style={[styles.actionBtn, styles.slipBtn]}
+                    onPress={() => openTenantRentSlip(record as TenantRent)}
+                    disabled={openingRentSlipId === (record as TenantRent).id}
+                  >
+                    <Text style={styles.actionText}>
+                      {openingRentSlipId === (record as TenantRent).id
+                        ? 'Opening...'
+                        : 'Slip'}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionBtn, styles.downloadBtn]}
+                    onPress={() => openTenantRentSlip(record as TenantRent, true)}
+                    disabled={openingRentSlipId === (record as TenantRent).id}
+                  >
+                    <Text style={styles.actionText}>Download</Text>
+                  </TouchableOpacity>
+                </>
+              ) : null}
               {activeTab === 'rents' &&
               (record as TenantRent).status !== 'Paid' ? (
                 <TouchableOpacity
@@ -1014,10 +1191,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                   key={tenant.id}
                   style={[styles.pickerItem, { borderBottomColor: colors.border }]}
                   onPress={() => {
-                    setSelectedTenant(tenant);
-                    if (activeTab === 'rents' && !editingRent) {
-                      setRentRoomRent(tenant.rent ? String(tenant.rent) : '');
-                    }
+                    selectTenantForRecord(tenant);
                     setPickerVisible(false);
                     setPickerSearch('');
                   }}
@@ -1059,7 +1233,7 @@ const styles = StyleSheet.create({
   name: { fontFamily: 'Nippo-Medium', fontSize: 16, fontWeight: '400' },
   meta: { fontFamily: 'Nippo-Light', fontSize: 12, marginTop: 4 },
   statusPill: { borderRadius: 8, fontFamily: 'Nippo-Medium', fontSize: 11, overflow: 'hidden', paddingHorizontal: 9, paddingVertical: 6 },
-  amountRow: { flexDirection: 'row', gap: 34, marginTop: 14 },
+  amountRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 34, marginTop: 14 },
   label: { fontFamily: 'Nippo-Light', fontSize: 11, marginBottom: 3 },
   amount: { color: '#27ae60', fontFamily: 'Nippo-Medium', fontWeight: '400' },
   notes: { fontFamily: 'Nippo-Medium', fontSize: 12, lineHeight: 18, marginTop: 12 },
@@ -1068,9 +1242,11 @@ const styles = StyleSheet.create({
   cancelText: { color: '#c0392b', fontFamily: 'Nippo-Medium', fontWeight: '400' },
   itemSelector: { alignItems: 'center', borderRadius: 8, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, padding: 12 },
   selectorValue: { fontFamily: 'Nippo-Medium', fontWeight: '400', maxWidth: 240 },
-  actions: { borderTopWidth: 1, flexDirection: 'row', gap: 10, marginTop: 14, paddingTop: 12 },
+  actions: { borderTopWidth: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 14, paddingTop: 12 },
   actionBtn: { alignItems: 'center', borderRadius: 8, flex: 1, paddingVertical: 9 },
   payBtn: { backgroundColor: '#111' },
+  slipBtn: { backgroundColor: '#1877f2', minWidth: '30%' },
+  downloadBtn: { backgroundColor: '#2c7a4b', minWidth: '30%' },
   editBtn: { backgroundColor: '#8a6200' },
   deleteBtn: { backgroundColor: '#c0392b' },
   actionText: { color: '#fff', fontFamily: 'Nippo-Medium', fontWeight: '400' },
@@ -1088,6 +1264,8 @@ const styles = StyleSheet.create({
   input: { borderRadius: 8, borderWidth: 1, fontFamily: 'Nippo-Medium', marginBottom: 10, padding: 10 },
   formRow: { flexDirection: 'row', gap: 10 },
   halfInput: { flex: 1 },
+  calculatedField: { justifyContent: 'center', minHeight: 45 },
+  rentTotalPreview: { borderRadius: 8, marginBottom: 10, padding: 12 },
   statusRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   statusBtn: { alignItems: 'center', borderRadius: 8, flex: 1, paddingVertical: 10 },
   statusBtnText: { fontFamily: 'Nippo-Medium', fontSize: 12, fontWeight: '400' },
