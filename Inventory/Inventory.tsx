@@ -320,6 +320,8 @@ export default function Inventory() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.screenTitle, { color: colors.text }]}>Inventory</Text>
+
       <View>
         <Icon
           name="search"
@@ -342,8 +344,8 @@ export default function Inventory() {
         />
       </View>
 
-      <TouchableOpacity style={styles.addBtn} onPress={openCreateModal}>
-        <Text style={{ color: "#fff", fontFamily: "Nippo-Medium", fontWeight: "400" }}>+ Add Item</Text>
+      <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.navActive }]} onPress={openCreateModal}>
+        <Text style={{ color: colors.nav, fontFamily: "Nippo-Medium", fontWeight: "400" }}>+ Add Item</Text>
       </TouchableOpacity>
 
       {loading ? (
@@ -673,6 +675,13 @@ export default function Inventory() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 12, backgroundColor: "#f5f6fa" },
+
+  screenTitle: {
+    fontFamily: "Nippo-Medium",
+    fontSize: 24,
+    fontWeight: "400",
+    marginBottom: 12,
+  },
 
   searchIcon: {
     position: "absolute",

@@ -781,6 +781,8 @@ const [selectedDate, setSelectedDate] = useState(new Date());
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.screenTitle, { color: colors.text }]}>Tenants</Text>
+
       <View style={[styles.viewSwitch, { backgroundColor: colors.surface }]}>
         {(['tenants', 'rents', 'payments'] as const).map(tab => (
           <TouchableOpacity
@@ -1039,6 +1041,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 12 },
+  screenTitle: { fontFamily: 'Nippo-Medium', fontSize: 24, fontWeight: '400', marginBottom: 12 },
   viewSwitch: { borderRadius: 10, flexDirection: 'row', marginBottom: 12, padding: 4 },
   viewSwitchBtn: { alignItems: 'center', borderRadius: 8, flex: 1, paddingVertical: 10 },
   viewSwitchText: { fontFamily: 'Nippo-Medium', fontSize: 13 },

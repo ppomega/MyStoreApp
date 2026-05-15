@@ -78,12 +78,12 @@ export default function Nav() {
           top: 12,
           backgroundColor: colors.surface,
           borderColor: colors.border,
-          borderRadius: 16,
+          borderRadius: 22,
           borderWidth: 1,
           alignItems: "center",
           justifyContent: "center",
-          height: 40,
-          width: 40,
+          height: 44,
+          width: 44,
           zIndex: 20,
         }}
       >

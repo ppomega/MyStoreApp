@@ -439,6 +439,7 @@ export default function BorrowersScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.screenTitle, { color: colors.text }]}>Borrowers</Text>
 
       {/* ── Top-level tab switch ─────────────────────────────────────────── */}
       <View style={[styles.viewSwitch, { backgroundColor: colors.surface }]}>
@@ -1006,6 +1007,13 @@ export default function BorrowersScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 12 },
+
+  screenTitle: {
+    fontFamily: 'Nippo-Medium',
+    fontSize: 24,
+    fontWeight: '400',
+    marginBottom: 12,
+  },
 
   // Tab switches
   viewSwitch: {
