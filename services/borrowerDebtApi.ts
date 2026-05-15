@@ -72,6 +72,7 @@ function unwrapBorrowerDebtResponse(
 function serializeBorrowerDebtForApi(debt: BorrowerDebtInput) {
   return {
     borrower: debt.borrower, // already a plain string id from BorrowerDebtInput
+    debtTaken: debt.debtTaken,
     value: debt.value,
   };
 }

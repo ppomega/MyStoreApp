@@ -14,10 +14,11 @@ export type TenantPaymentInput = Omit<
   'id' | 'createdAt' | 'updatedAt'
 >;
 
-type TenantRef = string | { _id?: string; id?: string; [key: string]: unknown };
+type TenantRef = string | { _id?: string; id?: string; name?: string; [key: string]: unknown };
 
 type TenantPaymentApiItem = {
   _id?: string;
+  id?: string;
   tenant?: TenantRef;
   paymentDate?: Date | string;
   value?: number | string;
@@ -39,7 +40,7 @@ function toNumber(value: number | string | undefined): number {
   return Number.isNaN(amount) ? 0 : amount;
 }
 
-function extractTenantId(tenant: TenantRef | undefined): string {
+function extractTenantName(tenant: TenantRef | undefined): string {
   if (!tenant) {
     return '';
   }
@@ -48,15 +49,15 @@ function extractTenantId(tenant: TenantRef | undefined): string {
     return tenant;
   }
 
-  return String(tenant._id || tenant.id || '');
+  return String(tenant.name || tenant._id || tenant.id || '');
 }
 
 function normalizeTenantPayment(
   payment: TenantPaymentApiItem,
 ): TenantPayment {
   return {
-    id: payment._id || '',
-    tenant: extractTenantId(payment.tenant),
+    id: payment._id || payment.id || '',
+    tenant: extractTenantName(payment.tenant),
     paymentDate: payment.paymentDate
       ? new Date(payment.paymentDate)
       : new Date(),

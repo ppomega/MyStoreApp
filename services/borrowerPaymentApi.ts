@@ -19,6 +19,7 @@ type BorrowerRef = string | { _id?: string; id?: string; [key: string]: unknown 
 type BorrowerPaymentApiItem = {
   _id?: string;
   borrower?: BorrowerRef;
+  paymentDate?: Date | string;
   paymentTaken?: Date | string;
   value?: number | string;
   createdAt?: string;
@@ -51,7 +52,11 @@ function normalizeBorrowerPayment(payment: BorrowerPaymentApiItem): BorrowerPaym
   return {
     id: payment._id || '',
     borrower: extractBorrowerId(payment.borrower),
-    paymentTaken: payment.paymentTaken ? new Date(payment.paymentTaken) : new Date(),
+    paymentTaken: payment.paymentDate
+      ? new Date(payment.paymentDate)
+      : payment.paymentTaken
+        ? new Date(payment.paymentTaken)
+        : new Date(),
     value: toNumber(payment.value),
     createdAt: payment.createdAt || '',
     updatedAt: payment.updatedAt || '',
@@ -71,7 +76,7 @@ function unwrapBorrowerPaymentResponse(
 function serializeBorrowerPaymentForApi(payment: BorrowerPaymentInput) {
   return {
     borrower: payment.borrower, // already a plain string id from BorrowerPaymentInput
-    paymentTaken: payment.paymentTaken,
+    paymentDate: payment.paymentTaken,
     value: payment.value,
   };
 }

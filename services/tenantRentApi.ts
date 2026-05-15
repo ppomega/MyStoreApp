@@ -8,8 +8,22 @@ export type TenantRent = {
   beforeUnits: number;
   afterUnits: number;
   units: number;
+  unitRate: number;
   totalRent: number;
   status: 'Paid' | 'Pending';
+  rentSlip?: {
+    filePath?: string;
+    fileName?: string;
+    generatedAt?: string;
+  };
+  previousRent?: {
+    id: string;
+    month: Date;
+    beforeUnits: number;
+    afterUnits: number;
+    units: number;
+    totalRent: number;
+  } | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -30,8 +44,23 @@ type TenantRentApiItem = {
   beforeUnits?: number | string;
   afterUnits?: number | string;
   units?: number | string;
+  unitRate?: number | string;
   totalRent?: number | string;
   status?: string;
+  rentSlip?: {
+    filePath?: string;
+    fileName?: string;
+    generatedAt?: string;
+  };
+  previousRent?: {
+    _id?: string;
+    id?: string;
+    month?: Date | string;
+    beforeUnits?: number | string;
+    afterUnits?: number | string;
+    units?: number | string;
+    totalRent?: number | string;
+  } | null;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -68,6 +97,7 @@ function normalizeTenantRent(rent: TenantRentApiItem): TenantRent {
   const units =
     rent.units === undefined ? Math.max(afterUnits - beforeUnits, 0) : toNumber(rent.units);
   const roomRent = toNumber(rent.roomRent);
+  const unitRate = rent.unitRate === undefined ? 8 : toNumber(rent.unitRate);
 
   return {
     id: rent._id || rent.id || '',
@@ -77,8 +107,20 @@ function normalizeTenantRent(rent: TenantRentApiItem): TenantRent {
     beforeUnits,
     afterUnits,
     units,
-    totalRent: rent.totalRent === undefined ? roomRent + units * 8 : toNumber(rent.totalRent),
+    unitRate,
+    totalRent: rent.totalRent === undefined ? roomRent + units * unitRate : toNumber(rent.totalRent),
     status: rent.status === 'Paid' ? 'Paid' : 'Pending',
+    rentSlip: rent.rentSlip,
+    previousRent: rent.previousRent
+      ? {
+          id: rent.previousRent._id || rent.previousRent.id || '',
+          month: rent.previousRent.month ? new Date(rent.previousRent.month) : new Date(),
+          beforeUnits: toNumber(rent.previousRent.beforeUnits),
+          afterUnits: toNumber(rent.previousRent.afterUnits),
+          units: toNumber(rent.previousRent.units),
+          totalRent: toNumber(rent.previousRent.totalRent),
+        }
+      : null,
     createdAt: rent.createdAt || '',
     updatedAt: rent.updatedAt || '',
   };
@@ -102,6 +144,7 @@ function serializeTenantRentForApi(rent: TenantRentInput) {
     beforeUnits: rent.beforeUnits,
     afterUnits: rent.afterUnits,
     units: rent.units,
+    unitRate: rent.unitRate,
     totalRent: rent.totalRent,
     status: rent.status,
   };

@@ -4,6 +4,7 @@ export type Borrower = {
   id: string;
   name: string;
   phone: string;
+  initialDebt?: number,
   debt:number,
   lastCredit:Date|undefined,
   lastDebit:Date|undefined,
@@ -18,6 +19,7 @@ export type BorrowerInput = Omit<Borrower, 'id' | 'createdAt' | 'updatedAt'>;
 type BorrowerApiItem = {
   _id?: string;
   name?: string;
+  initialDebt?: number | string;
   debt?: number;
   lastCredit?: Date;
   lastDebit?: Date;
@@ -50,6 +52,7 @@ function normalizeBorrower(borrower: BorrowerApiItem): Borrower {
     id: borrower._id || '',
     name: borrower.name ||  '',
     phone:String(borrower.phone),
+    initialDebt: toNumber(borrower.initialDebt),
     debt: toNumber(borrower.debt),
     lastCreditedValue: toNumber(borrower.lastCreditedValue),
     lastDebitedValue: toNumber(borrower.lastDebitedValue),
@@ -74,6 +77,7 @@ function serializeBorrowerForApi(borrower: BorrowerInput) {
   return {
     name: borrower.name,
     phone: borrower.phone,
+    initialDebt: borrower.initialDebt ?? borrower.debt,
     debt: borrower.debt,
     lastCreditedValue: borrower.lastCreditedValue,
     lastDebitedValue: borrower.lastDebitedValue,

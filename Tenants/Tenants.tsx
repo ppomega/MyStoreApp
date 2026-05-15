@@ -27,6 +27,7 @@ import {
 import {
   createTenantPayment,
   deleteTenantPayment,
+  getTenantPayments,
   TenantPayment,
   TenantPaymentInput,
   updateTenantPayment,
@@ -110,6 +111,13 @@ function getErrorMessage(error: unknown, fallback: string) {
   }
 
   return fallback;
+}
+
+async function settleRecords<T>(request: Promise<T[]>): Promise<T[]> {
+  const result = await Promise.allSettled([request]);
+  const [response] = result;
+
+  return response.status === 'fulfilled' ? response.value : [];
 }
 
 function getTenantName(tenant: any) {
@@ -199,13 +207,13 @@ const [selectedDate, setSelectedDate] = useState(new Date());
     try {
       setRecordsLoading(true);
       setRecordsError('');
-      const [rentItems] = await Promise.all([
-        getTenantRents(),
-        // getTenantPayments(),
+      const [rentItems, paymentItems] = await Promise.all([
+        settleRecords(getTenantRents()),
+        settleRecords(getTenantPayments()),
       ]);
       console.log('Loaded rents:', rentItems);
       setRents(rentItems);
-      // setPayments(paymentItems);
+      setPayments(paymentItems);
     } catch(e) {
       console.error('Error loading records:', e);
       setRecordsError(getErrorMessage(e, 'Could not load rent and payment records.'));
@@ -352,6 +360,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
           beforeUnits,
           afterUnits,
           units,
+          unitRate: UNIT_RATE,
           totalRent: roomRent + units * UNIT_RATE,
           status: rentStatus,
         };
