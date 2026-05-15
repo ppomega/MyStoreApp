@@ -19,10 +19,11 @@ export type TenantRentInput = Omit<
   'id' | 'createdAt' | 'updatedAt'
 >;
 
-type TenantRef = string | { _id?: string; id?: string; [key: string]: unknown };
+type TenantRef = string | { _id?: string; id?: string; name?: string; [key: string]: unknown };
 
 type TenantRentApiItem = {
   _id?: string;
+  id?: string;
   tenant?: TenantRef;
   month?: Date | string;
   roomRent?: number | string;
@@ -58,7 +59,7 @@ function extractTenantName(tenant: TenantRef | undefined): string {
     return tenant;
   }
 
-  return String(tenant.name || tenant.name || '');
+  return String(tenant.name || tenant._id || tenant.id || '');
 }
 
 function normalizeTenantRent(rent: TenantRentApiItem): TenantRent {
@@ -69,7 +70,7 @@ function normalizeTenantRent(rent: TenantRentApiItem): TenantRent {
   const roomRent = toNumber(rent.roomRent);
 
   return {
-    id: rent._id || '',
+    id: rent._id || rent.id || '',
     tenant: extractTenantName(rent.tenant),
     month: rent.month ? new Date(rent.month) : new Date(),
     roomRent,

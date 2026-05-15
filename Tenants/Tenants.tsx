@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import axios from 'axios';
 import DatePicker from 'react-native-date-picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {
@@ -26,7 +27,6 @@ import {
 import {
   createTenantPayment,
   deleteTenantPayment,
-  getTenantPayments,
   TenantPayment,
   TenantPaymentInput,
   updateTenantPayment,
@@ -97,6 +97,19 @@ function formatDate(value: string | Date | undefined) {
 
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError(error)) {
+    const responseData = error.response?.data as { error?: string } | undefined;
+    return responseData?.error || error.message || fallback;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return fallback;
 }
 
 function getTenantName(tenant: any) {
@@ -195,7 +208,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
       // setPayments(paymentItems);
     } catch(e) {
       console.error('Error loading records:', e);
-      setRecordsError('Could not load rent and payment records.');
+      setRecordsError(getErrorMessage(e, 'Could not load rent and payment records.'));
     } finally {
       setRecordsLoading(false);
     }
@@ -380,8 +393,8 @@ const [selectedDate, setSelectedDate] = useState(new Date());
       }
       resetRecordForm();
       loadTenants();
-    } catch {
-      Alert.alert('Save failed', 'Could not save this record.');
+    } catch (e) {
+      Alert.alert('Save failed', getErrorMessage(e, 'Could not save this record.'));
     } finally {
       setSaving(false);
     }
@@ -846,11 +859,11 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                 </View>
               </>
             ) : null}
-            <View style={[styles.actions, { borderTopColor: colors.border }]}>
+            <View style={[styles.actions, styles.historyActions, { borderTopColor: colors.border }]}>
               {activeTab === 'rents' ? (
                 <>
                   <TouchableOpacity
-                    style={[styles.actionBtn, styles.slipBtn]}
+                    style={[styles.actionBtn, styles.historyActionBtn, styles.slipBtn]}
                     onPress={() => openTenantRentSlip(record as TenantRent)}
                     disabled={openingRentSlipId === (record as TenantRent).id}
                   >
@@ -861,7 +874,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.actionBtn, styles.downloadBtn]}
+                    style={[styles.actionBtn, styles.historyActionBtn, styles.downloadBtn]}
                     onPress={() => openTenantRentSlip(record as TenantRent, true)}
                     disabled={openingRentSlipId === (record as TenantRent).id}
                   >
@@ -872,14 +885,14 @@ const [selectedDate, setSelectedDate] = useState(new Date());
               {activeTab === 'rents' &&
               (record as TenantRent).status !== 'Paid' ? (
                 <TouchableOpacity
-                  style={[styles.actionBtn, styles.payBtn]}
+                  style={[styles.actionBtn, styles.historyActionBtn, styles.payBtn]}
                   onPress={() => handleMarkRentPaid(record as TenantRent)}
                 >
                   <Text style={styles.actionText}>Paid</Text>
                 </TouchableOpacity>
               ) : null}
               <TouchableOpacity
-                style={[styles.actionBtn, styles.editBtn]}
+                style={[styles.actionBtn, styles.historyActionBtn, styles.editBtn]}
                 onPress={() =>
                   activeTab === 'rents'
                     ? startEditingRent(record as TenantRent)
@@ -889,7 +902,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
                 <Text style={styles.actionText}>Edit</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.actionBtn, styles.deleteBtn]}
+                style={[styles.actionBtn, styles.historyActionBtn, styles.deleteBtn]}
                 onPress={() =>
                   activeTab === 'rents'
                     ? handleDeleteRent(record as TenantRent)
@@ -1244,12 +1257,14 @@ const styles = StyleSheet.create({
   selectorValue: { fontFamily: 'Nippo-Medium', fontWeight: '400', maxWidth: 240 },
   actions: { borderTopWidth: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 14, paddingTop: 12 },
   actionBtn: { alignItems: 'center', borderRadius: 8, flex: 1, paddingVertical: 9 },
+  historyActions: { gap: 8 },
+  historyActionBtn: { flex: 0, minWidth: 82, paddingHorizontal: 12, paddingVertical: 7 },
   payBtn: { backgroundColor: '#111' },
-  slipBtn: { backgroundColor: '#1877f2', minWidth: '30%' },
-  downloadBtn: { backgroundColor: '#2c7a4b', minWidth: '30%' },
+  slipBtn: { backgroundColor: '#1877f2' },
+  downloadBtn: { backgroundColor: '#2c7a4b' },
   editBtn: { backgroundColor: '#8a6200' },
   deleteBtn: { backgroundColor: '#c0392b' },
-  actionText: { color: '#fff', fontFamily: 'Nippo-Medium', fontWeight: '400' },
+  actionText: { color: '#fff', fontFamily: 'Nippo-Medium', fontSize: 12, fontWeight: '400' },
   emptyState: { alignItems: 'center', gap: 12, marginTop: 32, paddingHorizontal: 20 },
   emptyText: { fontFamily: 'Nippo-Medium', marginTop: 24, textAlign: 'center' },
   errorText: { color: '#e74c3c', fontFamily: 'Nippo-Medium', textAlign: 'center' },
